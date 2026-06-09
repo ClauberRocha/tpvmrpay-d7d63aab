@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Trash2, Power, PowerOff, Loader2, Edit2, Check, X } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Power, PowerOff, Loader2, Edit2, Check, X, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -17,6 +17,7 @@ interface AuthorizedUser {
   is_active: boolean;
   role: string;
   created_at: string;
+  invited_at?: string;
 }
 
 const UserManagement = () => {
@@ -30,6 +31,7 @@ const UserManagement = () => {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editRole, setEditRole] = useState<string>("");
+  const [isInviting, setIsInviting] = useState<string | null>(null);
 
   // Only admins can manage users
   const isAdmin = role === "admin";
@@ -116,6 +118,31 @@ const UserManagement = () => {
       });
       setEditingId(null);
       fetchUsers();
+    }
+  };
+
+  const handleInviteUser = async (email: string) => {
+    setIsInviting(email);
+    try {
+      const { data, error } = await supabase.functions.invoke('invite-user', {
+        body: { email }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Convite enviado",
+        description: `Um e-mail de convite foi enviado para ${email}.`,
+      });
+      fetchUsers();
+    } catch (error: any) {
+      toast({
+        title: "Erro ao enviar convite",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsInviting(null);
     }
   };
 
@@ -248,6 +275,7 @@ const UserManagement = () => {
                   <TableHead>E-mail</TableHead>
                   <TableHead>Função</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Convite</TableHead>
                   <TableHead>Data de Criação</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -311,6 +339,17 @@ const UserManagement = () => {
                           {u.is_active ? "Ativo" : "Inativo"}
                         </Badge>
                       </TableCell>
+                      <TableCell>
+                        {u.invited_at ? (
+                          <span className="text-xs text-muted-foreground">
+                            Enviado em {new Date(u.invited_at).toLocaleDateString("pt-BR")}
+                          </span>
+                        ) : (
+                          <Badge variant="outline" className="text-orange-500 border-orange-500/50">
+                            Pendente
+                          </Badge>
+                        )}
+                      </TableCell>
                       <TableCell>{new Date(u.created_at).toLocaleDateString("pt-BR")}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
@@ -325,6 +364,20 @@ const UserManagement = () => {
                             className="h-8 w-8"
                           >
                             <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleInviteUser(u.email)}
+                            disabled={isInviting === u.email}
+                            title="Enviar/Reenviar Convite"
+                            className="h-8 w-8"
+                          >
+                            {isInviting === u.email ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Mail className="h-4 w-4 text-blue-500" />
+                            )}
                           </Button>
                           <Button
                             variant="outline"
