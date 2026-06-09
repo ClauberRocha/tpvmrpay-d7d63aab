@@ -26,6 +26,27 @@ serve(async (req) => {
       )
     }
 
+    // Check if user already exists in auth
+    const { data: existing } = await supabaseClient.auth.admin.listUsers()
+    const alreadyExists = existing?.users?.some(
+      (u: any) => u.email?.toLowerCase() === email.toLowerCase()
+    )
+
+    if (alreadyExists) {
+      // User exists — send a password reset link instead of invite
+      const { error: resetError } = await supabaseClient.auth.resetPasswordForEmail(email)
+      if (resetError) {
+        return new Response(
+          JSON.stringify({ error: resetError.message }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        )
+      }
+      return new Response(
+        JSON.stringify({ message: 'Usuário já cadastrado. Enviamos um e-mail para redefinir a senha.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      )
+    }
+
     // Invite the user via Supabase Auth
     const { data, error } = await supabaseClient.auth.admin.inviteUserByEmail(email)
 
@@ -36,7 +57,6 @@ serve(async (req) => {
       )
     }
 
-    // Update the invited_at column in authorized_users
     await supabaseClient
       .from('authorized_users')
       .update({ invited_at: new Date().toISOString() })
@@ -48,7 +68,7 @@ serve(async (req) => {
     )
   } catch (error) {
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as Error).message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     )
   }
