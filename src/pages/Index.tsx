@@ -1,4 +1,4 @@
-import { Activity, BarChart3, Building2, MapPin, Receipt, Ticket, Users, Wallet, LogOut, User } from "lucide-react";
+import { Activity, BarChart3, Building2, MapPin, Receipt, Ticket, Users, Wallet, LogOut, User, Settings } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import mrpayLogo from "@/assets/mrpay-logo.png";
 import { Button } from "@/components/ui/button";
@@ -159,6 +159,17 @@ const Index = () => {
               <Activity className="h-4 w-4 text-primary" />
               Atualizado em {lastUpdate}
             </div>
+            {user?.email === "clauber.rocha@mrpay.com.br" && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => navigate("/users")}
+                className="gap-2 border-primary/50 text-primary hover:bg-primary/10"
+              >
+                <Settings className="h-4 w-4" />
+                Gerenciar Usuários
+              </Button>
+            )}
             <Button 
               variant="outline" 
               size="sm" 

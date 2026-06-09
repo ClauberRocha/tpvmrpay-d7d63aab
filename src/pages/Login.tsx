@@ -34,14 +34,30 @@ const Login = () => {
     setErrorMessage("");
 
     try {
-      if (!email.toLowerCase().endsWith("@mrpay.com.br")) {
+      const emailLower = email.toLowerCase();
+      if (!emailLower.endsWith("@mrpay.com.br")) {
         setErrorMessage("Acesso permitido apenas para usuários corporativos MRPay.");
         setIsLoading(false);
         return;
       }
 
+      // Check if user is authorized in the table (unless it's Clauber)
+      if (emailLower !== "clauber.rocha@mrpay.com.br") {
+        const { data: authorized, error: authError } = await supabase
+          .from("authorized_users")
+          .select("is_active")
+          .eq("email", emailLower)
+          .single();
+
+        if (authError || !authorized || !authorized.is_active) {
+          setErrorMessage("Seu usuário não está autorizado ou está desativado. Entre em contato com o administrador.");
+          setIsLoading(false);
+          return;
+        }
+      }
+
       const { error } = await supabase.auth.signInWithPassword({
-        email,
+        email: emailLower,
         password,
       });
 
