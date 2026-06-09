@@ -1,4 +1,4 @@
-import { Activity, BarChart3, Building2, MapPin, Receipt, Ticket, Users, Wallet, LogOut } from "lucide-react";
+import { Activity, BarChart3, Building2, MapPin, Receipt, Ticket, Users, Wallet, LogOut, User } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import mrpayLogo from "@/assets/mrpay-logo.png";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { MapaUF } from "@/components/dashboard/MapaUF";
 import { TopClientes } from "@/components/dashboard/TopClientes";
 import { ClientesInativos } from "@/components/dashboard/ClientesInativos";
 import { AnaliseInsights } from "@/components/dashboard/AnaliseInsights";
+import { useAuth } from "@/components/AuthProvider";
 
 import { ComparativoAnual } from "@/components/dashboard/ComparativoAnual";
 import { ScrollToTopButton } from "@/components/ScrollToTopButton";
@@ -26,6 +27,7 @@ const MESES_LBL = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set"
 
 const Index = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [ano, setAno] = useState<Periodo>(tpv.meta.anos[tpv.meta.anos.length - 1] ?? "todos");
 
   const handleSignOut = async () => {
@@ -139,9 +141,17 @@ const Index = () => {
                   <span className="text-primary">TPV</span>
                 </h1>
               </div>
-              <p className="mt-1 text-sm text-white">
-                Dashboard Executivo
-              </p>
+              <div className="flex flex-col">
+                <p className="mt-1 text-sm text-white font-medium">
+                  Dashboard Executivo
+                </p>
+                {user && (
+                  <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-muted-foreground bg-muted/30 px-2 py-0.5 rounded-full w-fit">
+                    <User className="h-3 w-3" />
+                    <span>{user.email}</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-6">
