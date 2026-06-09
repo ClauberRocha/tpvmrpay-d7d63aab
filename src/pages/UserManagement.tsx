@@ -7,31 +7,38 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Trash2, Power, PowerOff, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Power, PowerOff, Loader2, Edit2, Check, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface AuthorizedUser {
   id: string;
   email: string;
   is_active: boolean;
+  role: string;
   created_at: string;
 }
 
 const UserManagement = () => {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [users, setUsers] = useState<AuthorizedUser[]>([]);
   const [newEmail, setNewEmail] = useState("");
+  const [newRole, setNewRole] = useState("user");
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editRole, setEditRole] = useState<string>("");
 
-  // Check if current user is admin (Clauber)
-  const isAdmin = user?.email === "clauber.rocha@mrpay.com.br";
+  // Only admins can manage users
+  const isAdmin = role === "admin";
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    if (isAdmin) {
+      fetchUsers();
+    }
+  }, [isAdmin]);
 
   const fetchUsers = async () => {
     setIsLoading(true);
@@ -66,7 +73,11 @@ const UserManagement = () => {
     setIsAdding(true);
     const { error } = await supabase
       .from("authorized_users")
-      .insert([{ email: newEmail.toLowerCase(), is_active: true }]);
+      .insert([{ 
+        email: newEmail.toLowerCase(), 
+        is_active: true,
+        role: newRole 
+      }]);
 
     if (error) {
       toast({
@@ -77,12 +88,35 @@ const UserManagement = () => {
     } else {
       toast({
         title: "Usuário adicionado",
-        description: "O e-mail foi autorizado com sucesso.",
+        description: `O e-mail foi autorizado como ${newRole} com sucesso.`,
       });
       setNewEmail("");
+      setNewRole("user");
       fetchUsers();
     }
     setIsAdding(false);
+  };
+
+  const handleUpdateRole = async (id: string) => {
+    const { error } = await supabase
+      .from("authorized_users")
+      .update({ role: editRole })
+      .eq("id", id);
+
+    if (error) {
+      toast({
+        title: "Erro ao atualizar função",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Função atualizada",
+        description: "A função do usuário foi alterada com sucesso.",
+      });
+      setEditingId(null);
+      fetchUsers();
+    }
   };
 
   const toggleStatus = async (id: string, currentStatus: boolean) => {
@@ -125,6 +159,14 @@ const UserManagement = () => {
     }
   };
 
+  const getRoleBadge = (role: string) => {
+    switch (role) {
+      case "admin": return <Badge className="bg-red-500 hover:bg-red-600">Administrador</Badge>;
+      case "manager": return <Badge className="bg-blue-500 hover:bg-blue-600">Gestor</Badge>;
+      default: return <Badge variant="secondary">Usuário</Badge>;
+    }
+  };
+
   if (!isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-6">
@@ -133,7 +175,7 @@ const UserManagement = () => {
             <CardTitle className="text-destructive">Acesso Negado</CardTitle>
           </CardHeader>
           <CardContent>
-            <p>Você não tem permissão para gerenciar usuários. Apenas o administrador do sistema pode acessar esta página.</p>
+            <p>Você não tem permissão para gerenciar usuários. Apenas administradores podem acessar esta página.</p>
             <Button onClick={() => navigate("/")} className="mt-4 w-full">Voltar ao Dashboard</Button>
           </CardContent>
         </Card>
@@ -143,7 +185,7 @@ const UserManagement = () => {
 
   return (
     <div className="min-h-screen bg-background p-6 lg:p-10">
-      <div className="max-w-5xl mx-auto space-y-8">
+      <div className="max-w-6xl mx-auto space-y-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
@@ -158,7 +200,7 @@ const UserManagement = () => {
             <CardTitle className="text-lg">Autorizar Novo Usuário</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleAddUser} className="flex gap-4">
+            <form onSubmit={handleAddUser} className="flex flex-col sm:flex-row gap-4">
               <Input
                 placeholder="usuario@mrpay.com.br"
                 value={newEmail}
@@ -166,6 +208,16 @@ const UserManagement = () => {
                 required
                 className="max-w-sm"
               />
+              <Select value={newRole} onValueChange={setNewRole}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Selecione a função" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">Administrador</SelectItem>
+                  <SelectItem value="manager">Gestor</SelectItem>
+                  <SelectItem value="user">Usuário</SelectItem>
+                </SelectContent>
+              </Select>
               <Button type="submit" disabled={isAdding}>
                 {isAdding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
                 Autorizar
@@ -183,6 +235,7 @@ const UserManagement = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>E-mail</TableHead>
+                  <TableHead>Função</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Data de Criação</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
@@ -191,13 +244,13 @@ const UserManagement = () => {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-10">
+                    <TableCell colSpan={5} className="text-center py-10">
                       <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
                     </TableCell>
                   </TableRow>
                 ) : users.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-10 text-muted-foreground">
+                    <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
                       Nenhum usuário autorizado encontrado.
                     </TableCell>
                   </TableRow>
@@ -205,6 +258,43 @@ const UserManagement = () => {
                   users.map((u) => (
                     <TableRow key={u.id}>
                       <TableCell className="font-medium">{u.email}</TableCell>
+                      <TableCell>
+                        {editingId === u.id ? (
+                          <div className="flex items-center gap-2">
+                            <Select value={editRole} onValueChange={setEditRole}>
+                              <SelectTrigger className="w-[140px] h-8 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="admin">Administrador</SelectItem>
+                                <SelectItem value="manager">Gestor</SelectItem>
+                                <SelectItem value="user">Usuário</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleUpdateRole(u.id)}>
+                              <Check className="h-4 w-4 text-green-500" />
+                            </Button>
+                            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditingId(null)}>
+                              <X className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            {getRoleBadge(u.role)}
+                            <Button 
+                              size="icon" 
+                              variant="ghost" 
+                              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => {
+                                setEditingId(u.id);
+                                setEditRole(u.role);
+                              }}
+                            >
+                              <Edit2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        )}
+                      </TableCell>
                       <TableCell>
                         <Badge variant={u.is_active ? "default" : "secondary"}>
                           {u.is_active ? "Ativo" : "Inativo"}
@@ -218,6 +308,7 @@ const UserManagement = () => {
                             size="icon"
                             onClick={() => toggleStatus(u.id, u.is_active)}
                             title={u.is_active ? "Desabilitar" : "Habilitar"}
+                            className="h-8 w-8"
                           >
                             {u.is_active ? <PowerOff className="h-4 w-4 text-orange-500" /> : <Power className="h-4 w-4 text-green-500" />}
                           </Button>
@@ -225,7 +316,7 @@ const UserManagement = () => {
                             variant="outline"
                             size="icon"
                             onClick={() => deleteUser(u.id)}
-                            className="text-destructive hover:bg-destructive/10"
+                            className="text-destructive hover:bg-destructive/10 h-8 w-8"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

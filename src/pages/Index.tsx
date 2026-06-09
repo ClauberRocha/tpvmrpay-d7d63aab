@@ -27,7 +27,7 @@ const MESES_LBL = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set"
 
 const Index = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const [ano, setAno] = useState<Periodo>(tpv.meta.anos[tpv.meta.anos.length - 1] ?? "todos");
 
   const handleSignOut = async () => {
@@ -159,7 +159,7 @@ const Index = () => {
               <Activity className="h-4 w-4 text-primary" />
               Atualizado em {lastUpdate}
             </div>
-            {user?.email === "clauber.rocha@mrpay.com.br" && (
+            {role === "admin" && (
               <Button 
                 variant="outline" 
                 size="sm" 
