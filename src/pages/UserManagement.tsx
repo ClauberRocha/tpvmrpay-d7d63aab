@@ -167,16 +167,27 @@ const UserManagement = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#fbbf24]"></div>
+      </div>
+    );
+  }
+
   if (!isAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-6">
-        <Card className="max-w-md w-full">
+      <div className="min-h-screen flex items-center justify-center bg-background p-6 text-center">
+        <Card className="max-w-md w-full border-red-900/50 bg-red-900/5">
           <CardHeader>
-            <CardTitle className="text-destructive">Acesso Negado</CardTitle>
+            <CardTitle className="text-destructive flex items-center justify-center gap-2">
+              <X className="h-6 w-6" />
+              Acesso Negado
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <p>Você não tem permissão para gerenciar usuários. Apenas administradores podem acessar esta página.</p>
-            <Button onClick={() => navigate("/")} className="mt-4 w-full">Voltar ao Dashboard</Button>
+            <p className="text-muted-foreground">Você não tem permissão para gerenciar usuários. Apenas administradores autorizados podem acessar esta página e suas funcionalidades.</p>
+            <Button onClick={() => navigate("/")} className="mt-6 w-full bg-primary hover:bg-primary/90">Voltar ao Dashboard</Button>
           </CardContent>
         </Card>
       </div>
