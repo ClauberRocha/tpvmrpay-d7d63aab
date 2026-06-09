@@ -146,8 +146,8 @@ const Index = () => {
                   Dashboard Executivo
                 </p>
                 {user && (
-                  <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-muted-foreground bg-muted/30 px-2 py-0.5 rounded-full w-fit">
-                    <User className="h-3 w-3" />
+                  <div className="flex items-center gap-1.5 mt-0.5 text-[14px] text-[#F9C730] px-2 py-0.5 rounded-full w-fit">
+                    <User className="h-4 w-4" />
                     <span>{user.email}</span>
                   </div>
                 )}
