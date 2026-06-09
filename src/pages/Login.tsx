@@ -45,7 +45,7 @@ const Login = () => {
       if (emailLower !== "clauber.rocha@mrpay.com.br") {
         const { data: authorized, error: authError } = await supabase
           .from("authorized_users")
-          .select("is_active")
+          .select("is_active, role")
           .eq("email", emailLower)
           .single();
 
@@ -60,6 +60,13 @@ const Login = () => {
         email: emailLower,
         password,
       });
+
+      // Log attempt to database (using service role via rpc or just direct if RLS allows)
+      await supabase.from("login_attempts").insert([{
+        email: emailLower,
+        success: !error,
+        user_agent: navigator.userAgent
+      }]);
 
       if (error) {
         setErrorMessage(error.message === "Invalid login credentials" 
