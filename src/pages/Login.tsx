@@ -183,6 +183,16 @@ const Login = () => {
               "Acessar Painel"
             )}
           </Button>
+
+          <div className="text-center">
+            <button 
+              type="button"
+              onClick={() => navigate("/signup")}
+              className="text-sm text-[#fbbf24] hover:underline transition-colors"
+            >
+              Não tem uma conta? Solicitar acesso
+            </button>
+          </div>
         </form>
 
         <div className="mt-8 space-y-2 text-center">
