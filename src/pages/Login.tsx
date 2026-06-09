@@ -115,7 +115,7 @@ const Login = () => {
 
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <Label htmlFor="password" name="password" className="text-sm font-medium">Senha</Label>
+              <Label htmlFor="password" className="text-sm font-medium">Senha</Label>
               <button 
                 type="button" 
                 onClick={handleForgotPassword}
