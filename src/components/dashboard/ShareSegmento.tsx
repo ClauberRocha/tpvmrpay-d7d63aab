@@ -15,7 +15,7 @@ const palette = [
 
 export function ShareSegmento({ filtros }: { filtros: Filtros }) {
   const { series, total } = useMemo(() => {
-    // Ignora filtro de segmento aqui (faz sentido ver share)
+    // Filtro de segmento é ignorado para mostrar a participação total/proporcional
     const f = { ...filtros, segmento: "todos" };
     const arr = dimensionRanking(tpv.segmentoTs, f);
     const total = arr.reduce((s, x) => s + x.tpv, 0);
