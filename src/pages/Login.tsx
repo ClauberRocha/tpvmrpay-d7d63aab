@@ -197,7 +197,7 @@ const Login = () => {
           <Button 
             type="submit" 
             disabled={isLoading}
-            className="w-full bg-[#fbbf24] hover:bg-[#f59e0b] text-black font-bold h-12 rounded-xl transition-all duration-200 mt-2"
+            className="w-full bg-[#fbbf24] hover:bg-[#f59e0b] text-black font-bold h-12 rounded-xl transition-all duration-300 mt-2 hover:scale-[1.02] active:scale-[0.98] hover:shadow-[0_0_20px_rgba(251,191,36,0.3)] hover:-translate-y-1"
           >
             {isLoading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
