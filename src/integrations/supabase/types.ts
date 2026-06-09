@@ -20,6 +20,7 @@ export type Database = {
           email: string
           id: string
           is_active: boolean
+          role: string
           updated_at: string
         }
         Insert: {
@@ -27,6 +28,7 @@ export type Database = {
           email: string
           id?: string
           is_active?: boolean
+          role?: string
           updated_at?: string
         }
         Update: {
@@ -34,7 +36,35 @@ export type Database = {
           email?: string
           id?: string
           is_active?: boolean
+          role?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      login_attempts: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          ip_address: string | null
+          success: boolean
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          ip_address?: string | null
+          success: boolean
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          ip_address?: string | null
+          success?: boolean
+          user_agent?: string | null
         }
         Relationships: []
       }
