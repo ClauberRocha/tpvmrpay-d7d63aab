@@ -1,6 +1,9 @@
-import { Activity, BarChart3, Building2, MapPin, Receipt, Ticket, Users, Wallet } from "lucide-react";
+import { Activity, BarChart3, Building2, MapPin, Receipt, Ticket, Users, Wallet, LogOut } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import mrpayLogo from "@/assets/mrpay-logo.png";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 import { Filtros } from "@/components/dashboard/Filtros";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { TendenciaTemporal } from "@/components/dashboard/TendenciaTemporal";
@@ -22,7 +25,13 @@ import {
 const MESES_LBL = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
 const Index = () => {
+  const navigate = useNavigate();
   const [ano, setAno] = useState<Periodo>(tpv.meta.anos[tpv.meta.anos.length - 1] ?? "todos");
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/login");
+  };
   const [meses, setMeses] = useState<number[]>([]);
   const [segmento, setSegmento] = useState("todos");
   const [uf, setUf] = useState("todos");
@@ -135,11 +144,20 @@ const Index = () => {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-6">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Activity className="h-4 w-4 text-primary" />
               Atualizado em {lastUpdate}
             </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleSignOut}
+              className="gap-2"
+            >
+              <LogOut className="h-4 w-4" />
+              Sair
+            </Button>
           </div>
         </header>
 
