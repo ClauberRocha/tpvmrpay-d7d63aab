@@ -161,28 +161,26 @@ const Index = () => {
               <Activity className="h-4 w-4 text-primary" />
               Atualizado em {lastUpdate}
             </div>
-            {role === "admin" && (
-              <Button 
+            <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={() => navigate("/users")}
+                disabled={role !== "admin"}
                 className="gap-2 border-primary/50 text-primary hover:bg-primary/10"
               >
                 <Settings className="h-4 w-4" />
                 Gerenciar Usuários
               </Button>
-            )}
-            {role === "admin" && (
-              <Button 
+            <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={() => navigate("/logs")}
+                disabled={role !== "admin"}
                 className="gap-2 border-primary/50 text-primary hover:bg-primary/10"
               >
                 <ClipboardList className="h-4 w-4" />
                 Logs
               </Button>
-            )}
             <Button 
               variant="outline" 
               size="sm" 
