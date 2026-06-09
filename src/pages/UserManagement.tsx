@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Trash2, Power, PowerOff, Loader2, Edit2, Check, X, Mail } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Power, PowerOff, Loader2, Edit2, Check, X, Mail, ClipboardList } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -88,6 +88,9 @@ const UserManagement = () => {
         variant: "destructive",
       });
     } else {
+      import("@/utils/logger").then(({ logActivity }) => {
+        logActivity('user_creation', `Usuário ${newEmail} criado com função ${newRole}`);
+      });
       toast({
         title: "Usuário adicionado",
         description: `O e-mail foi autorizado como ${newRole} com sucesso.`,
@@ -112,6 +115,9 @@ const UserManagement = () => {
         variant: "destructive",
       });
     } else {
+      import("@/utils/logger").then(({ logActivity }) => {
+        logActivity('permission_change', `Função do usuário alterada para ${editRole}`, { userId: id });
+      });
       toast({
         title: "Função atualizada",
         description: "A função do usuário foi alterada com sucesso.",
@@ -159,6 +165,9 @@ const UserManagement = () => {
         variant: "destructive",
       });
     } else {
+      import("@/utils/logger").then(({ logActivity }) => {
+        logActivity('status_change', `Status do usuário alterado para ${!currentStatus ? 'Ativo' : 'Inativo'}`, { userId: id });
+      });
       fetchUsers();
     }
   };
@@ -178,6 +187,9 @@ const UserManagement = () => {
         variant: "destructive",
       });
     } else {
+      import("@/utils/logger").then(({ logActivity }) => {
+        logActivity('user_deletion', `Usuário removido`, { userId: id });
+      });
       toast({
         title: "Usuário excluído",
         description: "O acesso foi removido com sucesso.",
@@ -231,6 +243,10 @@ const UserManagement = () => {
             </Button>
             <h1 className="text-3xl font-bold tracking-tight">Gerenciamento de Usuários</h1>
           </div>
+          <Button variant="outline" onClick={() => navigate("/logs")}>
+            <ClipboardList className="mr-2 h-4 w-4" />
+            Logs de Atividade
+          </Button>
         </div>
 
         <Card>
