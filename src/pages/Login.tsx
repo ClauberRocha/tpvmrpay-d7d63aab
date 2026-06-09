@@ -185,9 +185,14 @@ const Login = () => {
           </Button>
         </form>
 
-        <p className="text-center text-[10px] text-gray-500 mt-10 leading-relaxed uppercase tracking-wider">
-          Ao acessar, você concorda com nossos termos de segurança corporativa.
-        </p>
+        <div className="mt-10 space-y-2 text-center">
+          <p className="text-[10px] text-white leading-relaxed uppercase tracking-wider">
+            Ao acessar, você concorda com nossos termos de segurança corporativa.
+          </p>
+          <p className="text-[12px] text-white font-medium uppercase tracking-widest">
+            Desenvolvido por GERTEC/CONSULTI
+          </p>
+        </div>
       </div>
     </div>
   );
