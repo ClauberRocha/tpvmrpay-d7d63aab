@@ -1,7 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, createContext, useContext } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import type { User } from "@supabase/supabase-js";
+
+interface AuthContextType {
+  user: User | null;
+  loading: boolean;
+}
+
+const AuthContext = createContext<AuthContextType>({ user: null, loading: true });
+
+export const useAuth = () => useContext(AuthContext);
 
 interface AuthProviderProps {
   children: React.ReactNode;
@@ -36,11 +45,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#fbbf24]"></div>
       </div>
     );
   }
 
-  return user ? <>{children}</> : null;
+  return (
+    <AuthContext.Provider value={{ user, loading }}>
+      {user ? <>{children}</> : null}
+    </AuthContext.Provider>
+  );
 };
