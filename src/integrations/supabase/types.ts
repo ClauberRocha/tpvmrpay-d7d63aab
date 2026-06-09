@@ -19,6 +19,7 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          invited_at: string | null
           is_active: boolean
           role: string
           updated_at: string
@@ -27,6 +28,7 @@ export type Database = {
           created_at?: string
           email: string
           id?: string
+          invited_at?: string | null
           is_active?: boolean
           role?: string
           updated_at?: string
@@ -35,6 +37,7 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          invited_at?: string | null
           is_active?: boolean
           role?: string
           updated_at?: string
