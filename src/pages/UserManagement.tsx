@@ -317,6 +317,18 @@ const UserManagement = () => {
                           <Button
                             variant="outline"
                             size="icon"
+                            onClick={() => {
+                              setEditingId(u.id);
+                              setEditRole(u.role);
+                            }}
+                            title="Editar Função"
+                            className="h-8 w-8"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="icon"
                             onClick={() => toggleStatus(u.id, u.is_active)}
                             title={u.is_active ? "Desabilitar" : "Habilitar"}
                             className="h-8 w-8"
@@ -328,6 +340,7 @@ const UserManagement = () => {
                             size="icon"
                             onClick={() => deleteUser(u.id)}
                             className="text-destructive hover:bg-destructive/10 h-8 w-8"
+                            title="Excluir Usuário"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
