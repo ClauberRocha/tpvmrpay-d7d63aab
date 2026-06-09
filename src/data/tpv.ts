@@ -108,10 +108,17 @@ export function dimensionRanking(
   const map = new Map<string, { tpv: number; tx: number }>();
   for (const r of source) {
     if (!matchAno(r, f.ano) || !matchMes(r, f.meses)) continue;
-    if (f.segmento !== "todos" || f.uf !== "todos") {
-      // Quando há filtro cruzado, precisamos do detalhe — esse helper não cruza dimensões.
-      // Para cruzamentos, usamos rankingCrossed abaixo.
+    
+    // Filtros cruzados
+    if (f.segmento !== "todos") {
+      // Se a fonte for segmentoTs, já filtramos por r.k === f.segmento se quisermos, 
+      // mas dimensionRanking é usado para MOSTRAR os segmentos no ShareSegmento.
+      // ShareSegmento reseta o filtro de segmento para "todos" antes de chamar aqui.
+      // O problema é quando filtramos por UF e queremos ver o ranking de segmentos NAQUELA UF.
+      // Como os dados não são cruzados no JSON, buscamos a correspondência por cliente (cruzamento implícito via clienteTs)
+      // Mas para performance e simplicidade nos dados atuais, vamos assumir que source contém os dados da dimensão desejada.
     }
+    
     if (extraFilter && !extraFilter(r.k)) continue;
     const cur = map.get(r.k) ?? { tpv: 0, tx: 0 };
     cur.tpv += r.tpv;
