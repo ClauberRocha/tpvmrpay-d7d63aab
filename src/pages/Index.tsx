@@ -185,7 +185,7 @@ const Index = () => {
               variant="outline" 
               size="sm" 
               onClick={handleSignOut}
-              className="gap-2"
+              className="gap-2 border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300"
             >
               <LogOut className="h-4 w-4" />
               Sair

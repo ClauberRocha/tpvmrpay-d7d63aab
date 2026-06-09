@@ -19,9 +19,21 @@ const Login = () => {
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session) {
+        if (event === 'PASSWORD_RECOVERY') {
+          // You could redirect to a specific password reset page if needed
+          // For now we just let them in if it's recovery
+        }
         navigate("/");
+      }
+
+      if (event === 'USER_UPDATED' || event === 'PASSWORD_RECOVERY') {
+        const email = session?.user?.email;
+        if (email) {
+          const { logActivity } = await import("@/utils/logger");
+          logActivity('password_change', `Senha alterada com sucesso para ${email}`, { email });
+        }
       }
     });
 
