@@ -34,6 +34,12 @@ const Login = () => {
     setErrorMessage("");
 
     try {
+      if (!email.toLowerCase().endsWith("@mrpay.com.br")) {
+        setErrorMessage("Acesso permitido apenas para usuários corporativos MRPay.");
+        setIsLoading(false);
+        return;
+      }
+
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
