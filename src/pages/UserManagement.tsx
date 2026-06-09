@@ -137,8 +137,8 @@ const UserManagement = () => {
       if (error) throw error;
 
       toast({
-        title: "Convite enviado",
-        description: `Um e-mail de convite foi enviado para ${email}.`,
+        title: data?.message?.includes("redefinir") ? "E-mail já cadastrado" : "Convite enviado",
+        description: data?.message || `Um e-mail de convite foi enviado para ${email}.`,
       });
       fetchUsers();
     } catch (error: any) {
