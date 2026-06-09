@@ -86,7 +86,8 @@ export function monthlySeries(f: Filtros): { ano: number; mes: number; tpv: numb
   }
   const map = new Map<string, number>();
   for (const r of rows) {
-    if (!matchAno(r, f.ano) || !matchMes(r, f.meses)) continue;
+    if (!matchAno(r, f.ano)) continue;
+    if (f.meses.length > 0 && !matchMes(r, f.meses)) continue;
     const key = `${r.ano}-${String(r.mes).padStart(2, "0")}`;
     map.set(key, (map.get(key) ?? 0) + r.tpv);
   }
