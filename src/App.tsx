@@ -7,7 +7,17 @@ import Index from "./pages/Index.tsx";
 import Login from "./pages/Login.tsx";
 import UserManagement from "./pages/UserManagement.tsx";
 import NotFound from "./pages/NotFound.tsx";
-import { AuthProvider } from "./components/AuthProvider";
+import { AuthProvider, useAuth } from "./components/AuthProvider";
+import { Navigate } from "react-router-dom";
+
+const AdminRoute = () => {
+  const { role, loading } = useAuth();
+  
+  if (loading) return null;
+  if (role !== "admin") return <Navigate to="/" replace />;
+  
+  return <UserManagement />;
+};
 
 const queryClient = new QueryClient();
 
@@ -20,7 +30,11 @@ const App = () => (
         <Routes>
           <Route path="/" element={<AuthProvider><Index /></AuthProvider>} />
           <Route path="/login" element={<Login />} />
-          <Route path="/users" element={<AuthProvider><UserManagement /></AuthProvider>} />
+          <Route path="/users" element={
+            <AuthProvider>
+              <AdminRoute />
+            </AuthProvider>
+          } />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
