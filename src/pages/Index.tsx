@@ -320,8 +320,8 @@ const Index = () => {
               </div>
             </div>
           </div>
-          <div className="mt-4 text-center text-[#F9C730] text-[14px]">
-            clauber.rocha@mrpay.com.br
+          <div className="mt-6 text-center text-[#F9C730] text-[12px] font-bold uppercase tracking-[0.2em] opacity-90">
+            GERTEC/CONSULTI
           </div>
         </footer>
       </div>

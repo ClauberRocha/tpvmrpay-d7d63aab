@@ -340,6 +340,12 @@ const UserManagement = () => {
             </Table>
           </CardContent>
         </Card>
+
+        <footer className="mt-12 border-t border-border/40 pt-6 pb-4 text-center">
+          <p className="text-[#F9C730] text-[12px] font-bold uppercase tracking-[0.2em] opacity-90">
+            GERTEC/CONSULTI
+          </p>
+        </footer>
       </div>
     </div>
   );
