@@ -39,11 +39,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, []);
 
   const handleLogout = useCallback(async () => {
+    if (user?.email) {
+      const { logActivity } = await import("@/utils/logger");
+      logActivity('logout', `Sessão encerrada por inatividade ou logout para ${user.email}`);
+    }
     await supabase.auth.signOut();
     setUser(null);
     setRole(null);
     navigate("/login");
-  }, [navigate]);
+  }, [navigate, user]);
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;

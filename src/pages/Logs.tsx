@@ -61,6 +61,7 @@ const Logs = () => {
       case 'user_deletion': return <Badge className="bg-red-500">Exclusão</Badge>;
       case 'permission_change': return <Badge className="bg-purple-500">Permissão</Badge>;
       case 'password_change': return <Badge className="bg-orange-500">Senha</Badge>;
+      case 'status_change': return <Badge className="bg-amber-500">Status</Badge>;
       default: return <Badge variant="outline">{action}</Badge>;
     }
   };

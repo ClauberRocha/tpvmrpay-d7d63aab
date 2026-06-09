@@ -1,4 +1,4 @@
-import { Activity, BarChart3, Building2, MapPin, Receipt, Ticket, Users, Wallet, LogOut, User, Settings } from "lucide-react";
+import { Activity, BarChart3, Building2, MapPin, Receipt, Ticket, Users, Wallet, LogOut, User, Settings, ClipboardList } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import mrpayLogo from "@/assets/mrpay-logo.png";
 import { Button } from "@/components/ui/button";
@@ -170,6 +170,17 @@ const Index = () => {
               >
                 <Settings className="h-4 w-4" />
                 Gerenciar Usuários
+              </Button>
+            )}
+            {role === "admin" && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => navigate("/logs")}
+                className="gap-2 border-primary/50 text-primary hover:bg-primary/10"
+              >
+                <ClipboardList className="h-4 w-4" />
+                Logs
               </Button>
             )}
             <Button 
