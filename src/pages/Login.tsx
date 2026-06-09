@@ -61,7 +61,17 @@ const Login = () => {
         password,
       });
 
-      // Log attempt to database (using service role via rpc or just direct if RLS allows)
+      if (!error) {
+        // Log success and send WhatsApp notification
+        const { logActivity } = await import("@/utils/logger");
+        logActivity('login', `Login realizado com sucesso por ${emailLower}`);
+        
+        supabase.functions.invoke('whatsapp-notification', {
+          body: { email: emailLower }
+        }).catch(err => console.error("WhatsApp error:", err));
+      }
+
+      // Log attempt to database
       await supabase.from("login_attempts").insert([{
         email: emailLower,
         success: !error,

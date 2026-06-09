@@ -7,6 +7,7 @@ import Index from "./pages/Index.tsx";
 import Login from "./pages/Login.tsx";
 import UserManagement from "./pages/UserManagement.tsx";
 import Signup from "./pages/Signup.tsx";
+import Logs from "./pages/Logs.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import { AuthProvider, useAuth } from "./components/AuthProvider";
 import { Navigate } from "react-router-dom";
@@ -35,6 +36,11 @@ const App = () => (
           <Route path="/users" element={
             <AuthProvider>
               <AdminRoute />
+            </AuthProvider>
+          } />
+          <Route path="/logs" element={
+            <AuthProvider>
+              <Logs />
             </AuthProvider>
           } />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
