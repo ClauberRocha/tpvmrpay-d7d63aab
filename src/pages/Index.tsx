@@ -309,8 +309,8 @@ const Index = () => {
               </div>
             </div>
           </div>
-          <div className="mt-4 text-center">
-            Desenvolvido por Clauber Rocha
+          <div className="mt-4 text-center text-[#F9C730] text-[14px]">
+            Desenvolvido por clauber.rocha@mrpay.com.br
           </div>
         </footer>
       </div>
