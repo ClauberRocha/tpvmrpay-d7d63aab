@@ -31,6 +31,8 @@ const Index = () => {
   const [ano, setAno] = useState<Periodo>(tpv.meta.anos[tpv.meta.anos.length - 1] ?? "todos");
 
   const handleSignOut = async () => {
+    const { logActivity } = await import("@/utils/logger");
+    logActivity('logout', `O usuário ${user?.email} saiu do sistema`);
     await supabase.auth.signOut();
     navigate("/login");
   };
