@@ -11,15 +11,21 @@ export type LogAction =
 
 export const logActivity = async (action: LogAction, details: string, metadata: any = {}) => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
     
-    await supabase.from('user_logs').insert([{
-      user_id: user?.id,
-      email: user?.email,
+    // Fallback email if user is not in session but provided in metadata
+    const userEmail = currentUser?.email || metadata.email || 'Sistema';
+    const userId = currentUser?.id || metadata.userId;
+
+    const { error } = await supabase.from('user_logs').insert([{
+      user_id: userId,
+      email: userEmail,
       action,
       details,
       metadata
     }]);
+
+    if (error) throw error;
   } catch (error) {
     console.error('Error logging activity:', error);
   }
