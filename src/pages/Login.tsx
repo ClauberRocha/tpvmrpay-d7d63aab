@@ -190,7 +190,7 @@ const Login = () => {
             Ao acessar, você concorda com nossos termos de segurança corporativa.
           </p>
           <p className="text-[12px] text-white font-medium uppercase tracking-widest">
-            Desenvolvido por GERTEC/CONSULTI
+            GERTEC/CONSULTI
           </p>
         </div>
       </div>
