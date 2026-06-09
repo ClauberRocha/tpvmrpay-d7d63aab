@@ -1,0 +1,190 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Mr Pay TPV Dashboard — Dark Corporate Design System
+   All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Surfaces */
+    --background: 222 30% 7%;
+    --foreground: 210 20% 96%;
+
+    --card: 222 28% 10%;
+    --card-foreground: 210 20% 96%;
+    --card-elevated: 222 26% 13%;
+
+    --popover: 222 28% 10%;
+    --popover-foreground: 210 20% 96%;
+
+    /* Brand — Mr Pay yellow */
+    --primary: 45 100% 55%;
+    --primary-foreground: 222 47% 8%;
+    --primary-glow: 48 100% 65%;
+
+    /* Accents inspired by brand cyan & magenta */
+    --accent-cyan: 195 92% 55%;
+    --accent-magenta: 330 85% 60%;
+    --accent-green: 152 70% 48%;
+    --accent-orange: 25 95% 58%;
+    --accent-violet: 260 80% 65%;
+
+    --secondary: 222 22% 16%;
+    --secondary-foreground: 210 20% 96%;
+
+    --muted: 222 20% 14%;
+    --muted-foreground: 215 16% 60%;
+
+    --accent: 45 100% 55%;
+    --accent-foreground: 222 47% 8%;
+
+    --destructive: 0 75% 58%;
+    --destructive-foreground: 210 20% 98%;
+
+    --success: 152 70% 48%;
+    --warning: 38 95% 58%;
+
+    --border: 222 20% 18%;
+    --input: 222 20% 18%;
+    --ring: 45 100% 55%;
+
+    --radius: 0.875rem;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(45 100% 55%), hsl(38 100% 60%));
+    --gradient-card: linear-gradient(145deg, hsl(222 28% 11%) 0%, hsl(222 30% 8%) 100%);
+    --gradient-glow: radial-gradient(circle at 50% 0%, hsl(45 100% 55% / 0.18), transparent 70%);
+    --gradient-cyan: linear-gradient(135deg, hsl(195 92% 55%), hsl(210 92% 60%));
+    --gradient-magenta: linear-gradient(135deg, hsl(330 85% 60%), hsl(290 80% 60%));
+
+    /* Shadows */
+    --shadow-card: 0 1px 0 hsl(0 0% 100% / 0.04) inset, 0 10px 40px -20px hsl(0 0% 0% / 0.6);
+    --shadow-glow: 0 0 40px hsl(45 100% 55% / 0.25);
+
+    /* Sidebar (unused but defined) */
+    --sidebar-background: 222 30% 6%;
+    --sidebar-foreground: 210 20% 96%;
+    --sidebar-primary: 45 100% 55%;
+    --sidebar-primary-foreground: 222 47% 8%;
+    --sidebar-accent: 222 22% 14%;
+    --sidebar-accent-foreground: 210 20% 96%;
+    --sidebar-border: 222 20% 16%;
+    --sidebar-ring: 45 100% 55%;
+  }
+
+  .light {
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --card-elevated: 210 40% 96%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 45 100% 50%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 210 40% 94%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 94%;
+    --muted-foreground: 215 16% 40%;
+    --accent: 45 100% 50%;
+    --accent-foreground: 222 47% 11%;
+    --border: 214 32% 88%;
+    --input: 214 32% 88%;
+    --ring: 45 100% 50%;
+  }
+
+  .light body {
+    background-image:
+      radial-gradient(circle at 15% -10%, hsl(45 100% 55% / 0.10), transparent 45%),
+      radial-gradient(circle at 90% 10%, hsl(195 92% 55% / 0.08), transparent 50%);
+  }
+
+  /* No modo claro, qualquer texto/borda branca vira preta para garantir contraste */
+  .light .text-white,
+  html.light .text-white {
+    color: hsl(222 47% 11%) !important;
+  }
+  .light [style*="color: #ffffff"],
+  .light [style*="color: #fff"] {
+    color: hsl(222 47% 11%) !important;
+  }
+
+  html.light {
+    color-scheme: light;
+  }
+
+  .dark {
+    --background: 222 30% 7%;
+    --foreground: 210 20% 96%;
+    --card: 222 28% 10%;
+    --card-foreground: 210 20% 96%;
+    --popover: 222 28% 10%;
+    --popover-foreground: 210 20% 96%;
+    --primary: 45 100% 55%;
+    --primary-foreground: 222 47% 8%;
+    --secondary: 222 22% 16%;
+    --secondary-foreground: 210 20% 96%;
+    --muted: 222 20% 14%;
+    --muted-foreground: 215 16% 60%;
+    --accent: 45 100% 55%;
+    --accent-foreground: 222 47% 8%;
+    --destructive: 0 75% 58%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 222 20% 18%;
+    --input: 222 20% 18%;
+    --ring: 45 100% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
+    background-image:
+      radial-gradient(circle at 15% -10%, hsl(45 100% 55% / 0.08), transparent 45%),
+      radial-gradient(circle at 90% 10%, hsl(195 92% 55% / 0.06), transparent 50%);
+    background-attachment: fixed;
+  }
+}
+
+@layer components {
+  .kpi-card {
+    @apply relative overflow-hidden rounded-2xl border border-border/60 p-6;
+    background: var(--gradient-card);
+    box-shadow: var(--shadow-card);
+  }
+
+  .kpi-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--gradient-glow);
+    opacity: 0;
+    transition: opacity 300ms ease;
+    pointer-events: none;
+  }
+
+  .kpi-card:hover::before {
+    opacity: 1;
+  }
+
+  .panel {
+    @apply rounded-2xl border border-border/60 bg-card p-6;
+    box-shadow: var(--shadow-card);
+  }
+
+  .num-display {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+}
