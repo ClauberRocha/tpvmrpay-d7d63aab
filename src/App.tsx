@@ -9,6 +9,7 @@ import UserManagement from "./pages/UserManagement.tsx";
 import Signup from "./pages/Signup.tsx";
 import Logs from "./pages/Logs.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import LoginAudit from "./pages/LoginAudit.tsx";
 import { AuthProvider, useAuth } from "./components/AuthProvider";
 import { Navigate } from "react-router-dom";
 
@@ -41,6 +42,11 @@ const App = () => (
           <Route path="/logs" element={
             <AuthProvider>
               <Logs />
+            </AuthProvider>
+          } />
+          <Route path="/audit" element={
+            <AuthProvider>
+              <LoginAudit />
             </AuthProvider>
           } />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
