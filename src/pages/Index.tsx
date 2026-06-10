@@ -1,5 +1,6 @@
 import { Activity, BarChart3, Building2, MapPin, Receipt, Ticket, Users, Wallet, LogOut, User, Settings, ClipboardList } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { ShieldCheck } from "lucide-react";
 import mrpayLogo from "@/assets/mrpay-logo.png";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +29,7 @@ const MESES_LBL = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set"
 const Index = () => {
   const navigate = useNavigate();
   const { user, role } = useAuth();
+  const [lastLogin, setLastLogin] = useState<{ date: string; ua: string } | null>(null);
   const [ano, setAno] = useState<Periodo>(tpv.meta.anos[tpv.meta.anos.length - 1] ?? "todos");
 
   const handleSignOut = async () => {
@@ -65,6 +67,39 @@ const Index = () => {
       } catch {}
     }
   }, []);
+
+  useEffect(() => {
+    const fetchLastLogin = async () => {
+      if (!user?.email) return;
+      const { data } = await supabase
+        .from("login_attempts")
+        .select("created_at, user_agent")
+        .eq("email", user.email)
+        .eq("success", true)
+        .order("created_at", { ascending: false })
+        .limit(2) // Pega os dois últimos para garantir que vemos a sessão *anterior* à atual se necessário, 
+        // ou apenas o mais recente se quisermos o "atual" de agora
+        .single();
+      
+      // Vamos buscar o segundo registro (o anterior à sessão atual) se existir
+      const { data: previous } = await supabase
+        .from("login_attempts")
+        .select("created_at, user_agent")
+        .eq("email", user.email)
+        .eq("success", true)
+        .order("created_at", { ascending: false })
+        .range(1, 1)
+        .maybeSingle();
+
+      if (previous) {
+        setLastLogin({
+          date: new Date(previous.created_at).toLocaleString("pt-BR"),
+          ua: previous.user_agent
+        });
+      }
+    };
+    fetchLastLogin();
+  }, [user]);
 
   useEffect(() => {
     localStorage.setItem("tpv-filtros", JSON.stringify(filtros));
@@ -153,6 +188,13 @@ const Index = () => {
                     <span>{user.email}</span>
                   </div>
                 )}
+                {lastLogin && (
+                  <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                    Último acesso: <span className="text-gray-300">{lastLogin.date}</span>
+                    <span className="opacity-40">({lastLogin.ua.split(') ')[0].split(' (')[0]})</span>
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -180,6 +222,16 @@ const Index = () => {
               >
                 <ClipboardList className="h-4 w-4" />
                 Logs
+              </Button>
+            <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => navigate("/audit")}
+                disabled={role !== "admin"}
+                className="gap-2 border-primary/50 text-primary hover:bg-primary/10"
+              >
+                <ShieldCheck className="h-4 w-4" />
+                Auditoria
               </Button>
             <Button 
               variant="outline" 
