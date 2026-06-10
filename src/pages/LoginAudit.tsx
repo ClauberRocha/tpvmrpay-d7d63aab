@@ -121,14 +121,14 @@ const LoginAudit = () => {
                         Carregando registros...
                       </TableCell>
                     </TableRow>
-                  ) : filteredAttempts.length === 0 ? (
+                  ) : attempts.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={4} className="text-center py-10 text-muted-foreground">
                         Nenhum registro encontrado.
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredAttempts.map((attempt) => (
+                    attempts.map((attempt) => (
                       <TableRow key={attempt.id} className="border-[#2a2a2a] hover:bg-white/5">
                         <TableCell className="font-medium text-white">{attempt.email}</TableCell>
                         <TableCell className="text-muted-foreground">
@@ -162,6 +162,37 @@ const LoginAudit = () => {
                 </TableBody>
               </Table>
             </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between mt-6">
+                <div className="text-sm text-muted-foreground">
+                  Página {currentPage} de {totalPages} ({totalCount} registros)
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentPage === 1 || loading}
+                    onClick={() => setCurrentPage(prev => prev - 1)}
+                    className="border-[#2a2a2a] bg-[#262626]"
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    Anterior
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentPage === totalPages || loading}
+                    onClick={() => setCurrentPage(prev => prev + 1)}
+                    className="border-[#2a2a2a] bg-[#262626]"
+                  >
+                    Próxima
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
