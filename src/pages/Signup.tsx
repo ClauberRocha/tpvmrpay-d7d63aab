@@ -19,7 +19,7 @@ const Signup = () => {
     setIsLoading(true);
 
     try {
-      const emailLower = email.toLowerCase();
+      const emailLower = email.toLowerCase().trim();
       if (!emailLower.endsWith("@mrpay.com.br")) {
         toast({
           title: "E-mail inválido",
@@ -32,11 +32,13 @@ const Signup = () => {
       // We check if the user is already authorized
       const { data: authorized, error: authError } = await supabase
         .from("authorized_users")
-        .select("id")
-        .eq("email", emailLower)
-        .single();
+        .select("id, is_active")
+        .ilike("email", emailLower)
+        .maybeSingle();
 
-      if (authError || !authorized) {
+      if (authError) throw authError;
+
+      if (!authorized || !authorized.is_active) {
         toast({
           title: "Acesso pendente",
           description: "Seu e-mail ainda não foi autorizado pelo administrador. Por favor, solicite a autorização.",

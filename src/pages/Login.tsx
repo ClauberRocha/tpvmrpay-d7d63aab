@@ -46,7 +46,7 @@ const Login = () => {
     setErrorMessage("");
 
     try {
-      const emailLower = email.toLowerCase();
+      const emailLower = email.toLowerCase().trim();
       if (!emailLower.endsWith("@mrpay.com.br")) {
         setErrorMessage("Acesso permitido apenas para usuários corporativos MRPay.");
         setIsLoading(false);
@@ -58,10 +58,12 @@ const Login = () => {
         const { data: authorized, error: authError } = await supabase
           .from("authorized_users")
           .select("is_active, role")
-          .eq("email", emailLower)
-          .single();
+          .ilike("email", emailLower)
+          .maybeSingle();
 
-        if (authError || !authorized || !authorized.is_active) {
+        if (authError) throw authError;
+
+        if (!authorized || !authorized.is_active) {
           setErrorMessage("Seu usuário não está autorizado ou está desativado. Entre em contato com o administrador.");
           setIsLoading(false);
           return;
