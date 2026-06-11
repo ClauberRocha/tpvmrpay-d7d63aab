@@ -40,30 +40,26 @@ serve(async (req) => {
     )
 
     let resultMessage = '';
-    let status = 'sent';
-    let errorDetail = null;
+    
+    // Custom redirect URL that will handle the auth state
+    const siteUrl = req.headers.get('origin') || 'https://mrpay-metrics.lovable.app';
+    const redirectTo = `${siteUrl}/auth?type=${existingUser ? 'recovery' : 'invite'}`;
 
     if (existingUser) {
       console.log(`User ${normalizedEmail} already exists. Forcing password reset/recovery.`);
       
-      // User exists — send a password reset link
-      // We use resetPasswordForEmail which sends the system email for recovery
-      // This is more reliable than manual links for basic flow
       const { error: resetError } = await supabaseClient.auth.resetPasswordForEmail(normalizedEmail, {
-        redirectTo: `${req.headers.get('origin')}/auth?type=recovery`
+        redirectTo: redirectTo
       });
 
       if (resetError) {
         console.error('Error sending reset email:', resetError);
-        status = 'failed';
-        errorDetail = resetError.message;
         
-        // Update status in DB
         await supabaseClient
           .from('authorized_users')
           .update({ 
             invitation_status: 'failed',
-            invitation_error: errorDetail
+            invitation_error: resetError.message
           })
           .eq('email', normalizedEmail);
 
@@ -76,20 +72,19 @@ serve(async (req) => {
       resultMessage = 'E-mail autorizado! Como você já possui cadastro, enviamos um link para você criar/redefinir sua senha inicial.';
     } else {
       // Invite the user via Supabase Auth
+      // Note: By default Supabase uses the "Invite User" template.
       const { error: inviteError } = await supabaseClient.auth.admin.inviteUserByEmail(normalizedEmail, {
-        redirectTo: `${req.headers.get('origin')}/auth?type=invite`
+        redirectTo: redirectTo
       });
 
       if (inviteError) {
         console.error('Error sending invite:', inviteError);
-        status = 'failed';
-        errorDetail = inviteError.message;
         
         await supabaseClient
           .from('authorized_users')
           .update({ 
             invitation_status: 'failed',
-            invitation_error: errorDetail
+            invitation_error: inviteError.message
           })
           .eq('email', normalizedEmail);
 
