@@ -42,7 +42,7 @@ serve(async (req) => {
         )
       }
       return new Response(
-        JSON.stringify({ message: 'Usuário já cadastrado. Enviamos um e-mail para redefinir a senha.' }),
+        JSON.stringify({ message: 'E-mail autorizado! Como você já possui cadastro, enviamos um link para você criar/redefinir sua senha inicial.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       )
     }
@@ -63,7 +63,7 @@ serve(async (req) => {
       .eq('email', email)
 
     return new Response(
-      JSON.stringify({ message: 'Invitation sent successfully', data }),
+      JSON.stringify({ message: 'E-mail autorizado! Enviamos um convite para o seu e-mail para que você crie sua senha inicial.', data }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
   } catch (error) {
