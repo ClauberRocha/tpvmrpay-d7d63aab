@@ -27,20 +27,47 @@ serve(async (req) => {
     }
 
     // Check if user already exists in auth
-    const { data: existing } = await supabaseClient.auth.admin.listUsers()
-    const alreadyExists = existing?.users?.some(
+    const { data: usersData, error: listError } = await supabaseClient.auth.admin.listUsers()
+    
+    if (listError) {
+      console.error('Error listing users:', listError)
+    }
+
+    const existingUser = usersData?.users?.find(
       (u: any) => u.email?.toLowerCase() === email.toLowerCase()
     )
 
-    if (alreadyExists) {
+    if (existingUser) {
+      console.log(`User ${email} already exists. Sending password reset/recovery.`)
       // User exists — send a password reset link instead of invite
-      const { error: resetError } = await supabaseClient.auth.resetPasswordForEmail(email)
+      // We use redirectTo to ensure they go to the password update page
+      const { error: resetError } = await supabaseClient.auth.admin.generateLink({
+        type: 'recovery',
+        email: email,
+        options: {
+          redirectTo: `${req.headers.get('origin')}/auth?type=recovery`
+        }
+      })
+
       if (resetError) {
+        console.error('Error generating reset link:', resetError)
         return new Response(
           JSON.stringify({ error: resetError.message }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
         )
       }
+      
+      // Since generateLink just returns the link, we still need to send the email.
+      // Supabase resetPasswordForEmail is easier as it sends the email automatically.
+      const { error: sendError } = await supabaseClient.auth.resetPasswordForEmail(email)
+      
+      if (sendError) {
+        return new Response(
+          JSON.stringify({ error: sendError.message }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        )
+      }
+
       return new Response(
         JSON.stringify({ message: 'E-mail autorizado! Como você já possui cadastro, enviamos um link para você criar/redefinir sua senha inicial.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
