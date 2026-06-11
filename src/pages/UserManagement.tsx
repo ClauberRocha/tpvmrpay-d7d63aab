@@ -18,6 +18,9 @@ interface AuthorizedUser {
   role: string;
   created_at: string;
   invited_at?: string;
+  invitation_status?: string;
+  invitation_error?: string;
+  invitation_sent_at?: string;
 }
 
 const UserManagement = () => {
@@ -206,6 +209,45 @@ const UserManagement = () => {
     }
   };
 
+  const getInvitationBadge = (user: AuthorizedUser) => {
+    const status = user.invitation_status || (user.invited_at ? "sent" : "pending");
+    
+    switch (status) {
+      case "sent":
+        return (
+          <div className="flex flex-col gap-1">
+            <Badge variant="outline" className="text-green-500 border-green-500/50">
+              Enviado
+            </Badge>
+            {user.invitation_sent_at && (
+              <span className="text-[10px] text-muted-foreground">
+                {new Date(user.invitation_sent_at).toLocaleDateString("pt-BR")}
+              </span>
+            )}
+          </div>
+        );
+      case "failed":
+        return (
+          <div className="flex flex-col gap-1">
+            <Badge variant="destructive" className="text-[10px]" title={user.invitation_error}>
+              Falhou
+            </Badge>
+            {user.invitation_error && (
+              <span className="text-[10px] text-red-400 max-w-[120px] truncate" title={user.invitation_error}>
+                {user.invitation_error}
+              </span>
+            )}
+          </div>
+        );
+      default:
+        return (
+          <Badge variant="outline" className="text-orange-500 border-orange-500/50">
+            Pendente
+          </Badge>
+        );
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
@@ -356,15 +398,7 @@ const UserManagement = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {u.invited_at ? (
-                          <span className="text-xs text-muted-foreground">
-                            Enviado em {new Date(u.invited_at).toLocaleDateString("pt-BR")}
-                          </span>
-                        ) : (
-                          <Badge variant="outline" className="text-orange-500 border-orange-500/50">
-                            Pendente
-                          </Badge>
-                        )}
+                        {getInvitationBadge(u)}
                       </TableCell>
                       <TableCell>{new Date(u.created_at).toLocaleDateString("pt-BR")}</TableCell>
                       <TableCell className="text-right">
