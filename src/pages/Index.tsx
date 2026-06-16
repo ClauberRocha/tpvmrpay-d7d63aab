@@ -89,12 +89,14 @@ const Index = () => {
     const saved = localStorage.getItem("tpv-filtros");
     if (saved) {
       try {
-        const parsed = JSON.parse(saved);
-        if (parsed.ano !== undefined) setAno(parsed.ano);
-        if (Array.isArray(parsed.meses)) setMeses(parsed.meses);
-        if (parsed.segmento !== undefined) setSegmento(parsed.segmento);
-        if (parsed.uf !== undefined) setUf(parsed.uf);
-      } catch {}
+        const parsed = normalizarFiltros(JSON.parse(saved));
+        setAno(parsed.ano);
+        setMeses(parsed.meses);
+        setSegmento(parsed.segmento);
+        setUf(parsed.uf);
+      } catch {
+        localStorage.removeItem("tpv-filtros");
+      }
     }
   }, []);
 
