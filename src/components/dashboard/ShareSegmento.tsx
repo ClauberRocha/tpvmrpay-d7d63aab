@@ -41,6 +41,7 @@ export function ShareSegmento({ filtros }: { filtros: Filtros }) {
                 paddingAngle={2}
                 stroke="hsl(var(--background))"
                 strokeWidth={2}
+                isAnimationActive={false}
               >
                 {series.map((_, i) => (
                   <Cell key={i} fill={palette[i % palette.length]} />
