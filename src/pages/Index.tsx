@@ -26,6 +26,36 @@ import {
 
 const MESES_LBL = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
+const mesesDisponiveisPara = (ano: Periodo) => {
+  if (ano === "todos") {
+    return Array.from(new Set(Object.values(tpv.meta.mesesPorAno).flat())).sort((a, b) => a - b);
+  }
+  return tpv.meta.mesesPorAno[String(ano)] ?? [];
+};
+
+const normalizarAno = (value: unknown): Periodo => {
+  if (value === "todos") return "todos";
+  const n = typeof value === "string" ? Number(value) : value;
+  return typeof n === "number" && Number.isInteger(n) && tpv.meta.anos.includes(n)
+    ? n
+    : tpv.meta.anos[tpv.meta.anos.length - 1] ?? "todos";
+};
+
+const normalizarFiltros = (value: Partial<FiltrosType> | null | undefined): FiltrosType => {
+  const ano = normalizarAno(value?.ano);
+  const mesesValidos = new Set(mesesDisponiveisPara(ano));
+  const meses = Array.isArray(value?.meses)
+    ? Array.from(new Set(value.meses.map(Number).filter((m) => Number.isInteger(m) && mesesValidos.has(m)))).sort((a, b) => a - b)
+    : [];
+  const segmento = typeof value?.segmento === "string" && (value.segmento === "todos" || tpv.meta.segmentos.includes(value.segmento))
+    ? value.segmento
+    : "todos";
+  const uf = typeof value?.uf === "string" && (value.uf === "todos" || tpv.meta.ufs.includes(value.uf))
+    ? value.uf
+    : "todos";
+  return { ano, meses, segmento, uf };
+};
+
 const Index = () => {
   const navigate = useNavigate();
   const { user, role } = useAuth();
@@ -48,12 +78,12 @@ const Index = () => {
     root.classList.add("dark");
   }, []);
 
-  const filtros = useMemo<FiltrosType>(() => ({
+  const filtros = useMemo<FiltrosType>(() => normalizarFiltros({
     ano,
-    meses: [...meses].sort((a, b) => a - b),
+    meses,
     segmento,
     uf,
-  }), [ano, JSON.stringify(meses), segmento, uf]);
+  }), [ano, JSON.stringify(mes es), segmento, uf]);
 
   useEffect(() => {
     const saved = localStorage.getItem("tpv-filtros");
