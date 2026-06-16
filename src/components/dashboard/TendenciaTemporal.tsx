@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import {
   Area, AreaChart, CartesianGrid, ResponsiveContainer,
   Tooltip, XAxis, YAxis,
@@ -12,6 +12,8 @@ export function TendenciaTemporal({ filtros }: { filtros: Filtros }) {
       tpv: p.tpv,
     }));
   }, [filtros]);
+
+  const tooltipFormatter = useCallback((v: number) => [formatBRL(v), "TPV"], []);
 
   const total = series.reduce((s, p) => s + p.tpv, 0);
   const media = series.length ? total / series.length : 0;
@@ -51,7 +53,7 @@ export function TendenciaTemporal({ filtros }: { filtros: Filtros }) {
             <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 6" vertical={false} />
             <XAxis dataKey="label" stroke="#ffffff" fontSize={11} tickLine={false} axisLine={false} tick={{ fill: "#ffffff" }} />
             <YAxis stroke="#ffffff" fontSize={11} tickLine={false} axisLine={false} tick={{ fill: "#ffffff" }}
-              tickFormatter={(v) => formatBRLCompact(v)} />
+              tickFormatter={formatBRLCompact} />
             <Tooltip
               contentStyle={{
                 background: "hsl(var(--popover))",
@@ -62,7 +64,7 @@ export function TendenciaTemporal({ filtros }: { filtros: Filtros }) {
               }}
               labelStyle={{ color: "#ffffff" }}
               itemStyle={{ color: "#ffffff" }}
-              formatter={(v: number) => [formatBRL(v), "TPV"]}
+              formatter={tooltipFormatter}
             />
             <Area
               type="monotone"

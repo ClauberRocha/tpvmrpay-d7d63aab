@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { dimensionRanking, formatBRL, formatBRLCompact, tpv, type Filtros } from "@/data/tpv";
 
@@ -21,6 +21,8 @@ export function ShareSegmento({ filtros }: { filtros: Filtros }) {
     const total = arr.reduce((s, x) => s + x.tpv, 0);
     return { series: arr, total };
   }, [filtros]);
+
+  const tooltipFormatter = useCallback((v: number, n: string | number) => [formatBRL(v), String(n)], []);
 
   return (
     <div className="panel">
@@ -57,7 +59,7 @@ export function ShareSegmento({ filtros }: { filtros: Filtros }) {
                 }}
                 labelStyle={{ color: "#ffffff" }}
                 itemStyle={{ color: "#ffffff" }}
-                formatter={(v: number, n) => [formatBRL(v), n as string]}
+                formatter={tooltipFormatter}
               />
             </PieChart>
           </ResponsiveContainer>

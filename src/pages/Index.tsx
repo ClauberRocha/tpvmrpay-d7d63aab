@@ -56,6 +56,13 @@ const normalizarFiltros = (value: Partial<FiltrosType> | null | undefined): Filt
   return { ano, meses, segmento, uf };
 };
 
+const CATEGORIA_COLOR_MAP = {
+  Diamante: "#3070cd",
+  Ouro: "hsl(45 95% 55%)",
+  Prata: "hsl(220 10% 75%)",
+  Bronze: "hsl(25 65% 50%)",
+};
+
 const Index = () => {
   const navigate = useNavigate();
   const { user, role } = useAuth();
@@ -347,12 +354,7 @@ const Index = () => {
             title="Desempenho por Categoria"
             subtitle="TPV por nível de categoria do cliente"
             color="hsl(var(--accent-cyan))"
-            colorMap={{
-              Diamante: "#3070cd",
-              Ouro: "hsl(45 95% 55%)",
-              Prata: "hsl(220 10% 75%)",
-              Bronze: "hsl(25 65% 50%)",
-            }}
+            colorMap={CATEGORIA_COLOR_MAP}
           />
           <RankBars
             filtros={filtros}

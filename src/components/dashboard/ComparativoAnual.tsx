@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import {
   Bar, BarChart, CartesianGrid, Cell, LabelList, Legend, ReferenceLine,
   ResponsiveContainer, Tooltip, XAxis, YAxis,
@@ -35,6 +35,11 @@ export function ComparativoAnual() {
         };
       });
   }, []);
+
+  const tooltipFormatter1 = useCallback((v: number, name: string | number) => [formatBRL(v), String(name)], []);
+  const tooltipFormatter2 = useCallback((v: number) => [`${v >= 0 ? "+" : ""}${v.toFixed(1)}%`, "Variação YoY"], []);
+  const yAxisPercentFormatter = useCallback((v: number) => `${v.toFixed(0)}%`, []);
+  const labelListPercentFormatter = useCallback((v: number) => `${v >= 0 ? "+" : ""}${v.toFixed(1)}%`, []);
 
   const total2025 = data.reduce((s, d) => s + d["2025"], 0);
   const total2026 = data.reduce((s, d) => s + d["2026"], 0);
@@ -85,7 +90,7 @@ export function ComparativoAnual() {
             <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 6" vertical={false} />
             <XAxis dataKey="label" stroke="#ffffff" fontSize={12} tickLine={false} axisLine={false} tick={{ fill: "#ffffff" }} />
             <YAxis stroke="#ffffff" fontSize={11} tickLine={false} axisLine={false} tick={{ fill: "#ffffff" }}
-              tickFormatter={(v) => formatBRLCompact(v)} />
+              tickFormatter={formatBRLCompact} />
             <Tooltip
               cursor={{ fill: "hsl(var(--muted) / 0.25)" }}
               contentStyle={{
@@ -97,16 +102,16 @@ export function ComparativoAnual() {
               }}
               labelStyle={{ color: "#ffffff" }}
               itemStyle={{ color: "#ffffff" }}
-              formatter={(v: number, name) => [formatBRL(v), name as string]}
+              formatter={tooltipFormatter1}
             />
             <Legend wrapperStyle={{ color: "#ffffff", fontSize: 12, paddingTop: 8 }} />
             <Bar dataKey="2025" fill={COR_2025} radius={[6, 6, 0, 0]} maxBarSize={56}>
               <LabelList dataKey="2025" position="top" fill="#ffffff" fontSize={10}
-                formatter={(v: number) => formatBRLCompact(v)} />
+                formatter={formatBRLCompact} />
             </Bar>
             <Bar dataKey="2026" fill={COR_2026} radius={[6, 6, 0, 0]} maxBarSize={56}>
               <LabelList dataKey="2026" position="top" fill="#ffffff" fontSize={10}
-                formatter={(v: number) => formatBRLCompact(v)} />
+                formatter={formatBRLCompact} />
             </Bar>
           </BarChart>
         </ResponsiveContainer>
@@ -124,7 +129,7 @@ export function ComparativoAnual() {
               <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 6" vertical={false} />
               <XAxis dataKey="label" stroke="#ffffff" fontSize={12} tickLine={false} axisLine={false} tick={{ fill: "#ffffff" }} />
               <YAxis stroke="#ffffff" fontSize={11} tickLine={false} axisLine={false} tick={{ fill: "#ffffff" }}
-                tickFormatter={(v) => `${v.toFixed(0)}%`} />
+                tickFormatter={yAxisPercentFormatter} />
               <Tooltip
                 cursor={{ fill: "hsl(var(--muted) / 0.25)" }}
                 contentStyle={{
@@ -136,7 +141,7 @@ export function ComparativoAnual() {
                 }}
                 labelStyle={{ color: "#ffffff" }}
                 itemStyle={{ color: "#ffffff" }}
-                formatter={(v: number) => [`${v >= 0 ? "+" : ""}${v.toFixed(1)}%`, "Variação YoY"]}
+                formatter={tooltipFormatter2}
               />
               <ReferenceLine y={0} stroke="#ffffff" strokeWidth={2} />
               <Bar dataKey="variacao" radius={[6, 6, 6, 6]} maxBarSize={56}>
@@ -144,7 +149,7 @@ export function ComparativoAnual() {
                   <Cell key={i} fill={d.variacao >= 0 ? "hsl(var(--success))" : "#F42722"} />
                 ))}
                 <LabelList dataKey="variacao" position="top" fill="#ffffff" fontSize={11}
-                  formatter={(v: number) => `${v >= 0 ? "+" : ""}${v.toFixed(1)}%`} />
+                  formatter={labelListPercentFormatter} />
               </Bar>
             </BarChart>
           </ResponsiveContainer>

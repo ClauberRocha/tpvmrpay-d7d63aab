@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import {
   Bar, BarChart, Cell, CartesianGrid, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
@@ -20,6 +20,19 @@ export function RankBars({ filtros, source, title, subtitle, color = "hsl(var(--
     const arr = dimensionRanking(tpv[source] as TsRowK[], filtros);
     return arr.slice(0, limit).map((s) => ({ name: s.name, value: s.tpv }));
   }, [filtros, source, limit]);
+
+  const tooltipFormatter = useCallback((v: number) => [formatBRL(v), "TPV"], []);
+
+  const yAxisTickRenderer = useCallback((props: any) => {
+    const { x, y, payload } = props;
+    const fill = colorMap?.[payload.value] ?? "hsl(var(--muted-foreground))";
+    const label = payload.value.length > 22 ? payload.value.slice(0, 20) + "…" : payload.value;
+    return (
+      <text x={x} y={y} dy={4} textAnchor="end" fontSize={12} fontWeight={600} fill={fill}>
+        {label}
+      </text>
+    );
+  }, [colorMap]);
 
   const total = series.reduce((s, x) => s + x.value, 0);
   const lider = series[0];
@@ -44,19 +57,10 @@ export function RankBars({ filtros, source, title, subtitle, color = "hsl(var(--
           <BarChart data={series} layout="vertical" margin={{ top: 4, right: 160, left: 8, bottom: 0 }}>
             <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 6" horizontal={false} />
             <XAxis type="number" stroke="#ffffff" fontSize={11}
-              tickLine={false} axisLine={false} tick={{ fill: "#ffffff" }} tickFormatter={(v) => formatBRLCompact(v)} />
+              tickLine={false} axisLine={false} tick={{ fill: "#ffffff" }} tickFormatter={formatBRLCompact} />
             <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12}
               tickLine={false} axisLine={false} width={150}
-              tick={(props) => {
-                const { x, y, payload } = props;
-                const fill = colorMap?.[payload.value] ?? "hsl(var(--muted-foreground))";
-                const label = payload.value.length > 22 ? payload.value.slice(0, 20) + "…" : payload.value;
-                return (
-                  <text x={x} y={y} dy={4} textAnchor="end" fontSize={12} fontWeight={600} fill={fill}>
-                    {label}
-                  </text>
-                );
-              }} />
+              tick={yAxisTickRenderer} />
             <Tooltip
               cursor={{ fill: "hsl(var(--muted) / 0.4)" }}
               contentStyle={{
@@ -68,7 +72,7 @@ export function RankBars({ filtros, source, title, subtitle, color = "hsl(var(--
               }}
               labelStyle={{ color: "#ffffff" }}
               itemStyle={{ color: "#ffffff" }}
-              formatter={(v: number) => [formatBRL(v), "TPV"]}
+              formatter={tooltipFormatter}
             />
             <Bar dataKey="value" radius={[0, 6, 6, 0]}>
               {series.map((entry, i) => (
@@ -77,7 +81,7 @@ export function RankBars({ filtros, source, title, subtitle, color = "hsl(var(--
               <LabelList
                 dataKey="value"
                 position="right"
-                formatter={(v: number) => formatBRL(v)}
+                formatter={formatBRL}
                 style={{ fill: "#ffffff", fontSize: 11, fontWeight: 600 }}
               />
             </Bar>
