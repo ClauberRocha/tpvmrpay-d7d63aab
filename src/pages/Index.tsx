@@ -83,7 +83,7 @@ const Index = () => {
     meses,
     segmento,
     uf,
-  }), [ano, JSON.stringify(mes es), segmento, uf]);
+  }), [ano, JSON.stringify(meses), segmento, uf]);
 
   useEffect(() => {
     const saved = localStorage.getItem("tpv-filtros");
