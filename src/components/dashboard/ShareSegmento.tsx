@@ -29,7 +29,7 @@ export function ShareSegmento({ filtros }: { filtros: Filtros }) {
         <p className="text-xs text-muted-foreground">Participação no TPV</p>
       </div>
       <div className="grid grid-cols-1 gap-4 items-center">
-        <div className="h-[220px] relative">
+        <div className="h-[220px] w-full min-w-0 relative">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -41,6 +41,7 @@ export function ShareSegmento({ filtros }: { filtros: Filtros }) {
                 paddingAngle={2}
                 stroke="hsl(var(--background))"
                 strokeWidth={2}
+                isAnimationActive={false}
               >
                 {series.map((_, i) => (
                   <Cell key={i} fill={palette[i % palette.length]} />
