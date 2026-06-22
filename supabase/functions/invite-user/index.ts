@@ -6,6 +6,11 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Cooldown entre reenvios (segundos)
+const RESEND_COOLDOWN_SECONDS = 60;
+// Validade de um convite Supabase (24h por padrão)
+const INVITE_VALIDITY_HOURS = 24;
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -17,7 +22,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { email } = await req.json()
+    const { email, force } = await req.json()
 
     if (!email) {
       return new Response(
@@ -28,88 +33,100 @@ serve(async (req) => {
 
     const normalizedEmail = email.toLowerCase().trim();
 
+    // Verifica cooldown
+    const { data: existingRow } = await supabaseClient
+      .from('authorized_users')
+      .select('invitation_sent_at, invitation_count, invitation_expires_at')
+      .eq('email', normalizedEmail)
+      .maybeSingle();
+
+    if (existingRow?.invitation_sent_at && !force) {
+      const lastSent = new Date(existingRow.invitation_sent_at).getTime();
+      const elapsed = (Date.now() - lastSent) / 1000;
+      if (elapsed < RESEND_COOLDOWN_SECONDS) {
+        const wait = Math.ceil(RESEND_COOLDOWN_SECONDS - elapsed);
+        return new Response(
+          JSON.stringify({
+            error: `Aguarde ${wait}s antes de reenviar o convite. O último envio foi há poucos segundos.`,
+            cooldown_seconds: wait,
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 429 }
+        );
+      }
+    }
+
     // Check if user already exists in auth
     const { data: usersData, error: listError } = await supabaseClient.auth.admin.listUsers()
-    
-    if (listError) {
-      console.error('Error listing users:', listError)
-    }
+    if (listError) console.error('Error listing users:', listError)
 
     const existingUser = usersData?.users?.find(
       (u: any) => u.email?.toLowerCase() === normalizedEmail
     )
 
     let resultMessage = '';
-    
-    // Custom redirect URL that will handle the auth state
-    const siteUrl = req.headers.get('origin') || 'https://mrpay-metrics.lovable.app';
+    let invitationType: 'invite' | 'recovery' = 'invite';
+
+    const siteUrl = req.headers.get('origin') || 'https://tpvmrpay.lovable.app';
     const redirectTo = `${siteUrl}/auth?type=${existingUser ? 'recovery' : 'invite'}`;
 
     if (existingUser) {
-      console.log(`User ${normalizedEmail} already exists. Forcing password reset/recovery.`);
-      
+      invitationType = 'recovery';
       const { error: resetError } = await supabaseClient.auth.resetPasswordForEmail(normalizedEmail, {
-        redirectTo: redirectTo
+        redirectTo,
       });
 
       if (resetError) {
-        console.error('Error sending reset email:', resetError);
-        
         await supabaseClient
           .from('authorized_users')
-          .update({ 
-            invitation_status: 'failed',
-            invitation_error: resetError.message
-          })
+          .update({ invitation_status: 'failed', invitation_error: resetError.message })
           .eq('email', normalizedEmail);
-
         return new Response(
           JSON.stringify({ error: `Erro ao reenviar: ${resetError.message}` }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
         );
       }
-      
-      resultMessage = 'E-mail autorizado! Como você já possui cadastro, enviamos um link para você criar/redefinir sua senha inicial.';
+      resultMessage = 'E-mail de redefinição de senha enviado (usuário já cadastrado).';
     } else {
-      // Invite the user via Supabase Auth
-      // Note: By default Supabase uses the "Invite User" template.
       const { error: inviteError } = await supabaseClient.auth.admin.inviteUserByEmail(normalizedEmail, {
-        redirectTo: redirectTo
+        redirectTo,
       });
 
       if (inviteError) {
-        console.error('Error sending invite:', inviteError);
-        
         await supabaseClient
           .from('authorized_users')
-          .update({ 
-            invitation_status: 'failed',
-            invitation_error: inviteError.message
-          })
+          .update({ invitation_status: 'failed', invitation_error: inviteError.message })
           .eq('email', normalizedEmail);
-
         return new Response(
           JSON.stringify({ error: `Erro ao enviar convite: ${inviteError.message}` }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
         );
       }
-
-      resultMessage = 'E-mail autorizado! Enviamos um convite para o seu e-mail para que você crie sua senha inicial.';
+      resultMessage = 'Convite enviado. O usuário receberá um e-mail para criar a senha.';
     }
 
-    // Success update
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + INVITE_VALIDITY_HOURS * 3600 * 1000);
+
     await supabaseClient
       .from('authorized_users')
-      .update({ 
-        invited_at: new Date().toISOString(),
-        invitation_sent_at: new Date().toISOString(),
+      .update({
+        invited_at: now.toISOString(),
+        invitation_sent_at: now.toISOString(),
         invitation_status: 'sent',
-        invitation_error: null
+        invitation_error: null,
+        invitation_type: invitationType,
+        invitation_expires_at: expiresAt.toISOString(),
+        invitation_count: (existingRow?.invitation_count ?? 0) + 1,
       })
       .eq('email', normalizedEmail);
 
     return new Response(
-      JSON.stringify({ message: resultMessage }),
+      JSON.stringify({
+        message: resultMessage,
+        invitation_type: invitationType,
+        expires_at: expiresAt.toISOString(),
+        cooldown_seconds: RESEND_COOLDOWN_SECONDS,
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
   } catch (error) {
