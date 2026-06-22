@@ -19,9 +19,12 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          invitation_count: number
           invitation_error: string | null
+          invitation_expires_at: string | null
           invitation_sent_at: string | null
           invitation_status: string | null
+          invitation_type: string | null
           invited_at: string | null
           is_active: boolean
           role: string
@@ -31,9 +34,12 @@ export type Database = {
           created_at?: string
           email: string
           id?: string
+          invitation_count?: number
           invitation_error?: string | null
+          invitation_expires_at?: string | null
           invitation_sent_at?: string | null
           invitation_status?: string | null
+          invitation_type?: string | null
           invited_at?: string | null
           is_active?: boolean
           role?: string
@@ -43,9 +49,12 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          invitation_count?: number
           invitation_error?: string | null
+          invitation_expires_at?: string | null
           invitation_sent_at?: string | null
           invitation_status?: string | null
+          invitation_type?: string | null
           invited_at?: string | null
           is_active?: boolean
           role?: string
@@ -115,7 +124,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_users_access_status: {
+        Args: never
+        Returns: {
+          auth_confirmed_at: string
+          auth_last_sign_in_at: string
+          auth_user_id: string
+          created_at: string
+          email: string
+          id: string
+          invitation_count: number
+          invitation_error: string
+          invitation_expires_at: string
+          invitation_sent_at: string
+          invitation_status: string
+          invitation_type: string
+          invited_at: string
+          is_active: boolean
+          role: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
