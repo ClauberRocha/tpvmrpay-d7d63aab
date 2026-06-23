@@ -53,33 +53,32 @@ const Login = () => {
         return;
       }
 
-      // Check if user is authorized in the table (unless it's Clauber)
-      if (emailLower !== "clauber.rocha@mrpay.com.br") {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: emailLower,
+        password,
+      });
+
+      // After successful sign-in, verify authorization (RLS allows authenticated reads)
+      if (!error && emailLower !== "clauber.rocha@mrpay.com.br") {
         const { data: authorized, error: authError } = await supabase
           .from("authorized_users")
           .select("is_active, role")
           .ilike("email", emailLower)
           .maybeSingle();
 
-        if (authError) throw authError;
-
-        if (!authorized || !authorized.is_active) {
+        if (authError || !authorized || !authorized.is_active) {
+          await supabase.auth.signOut();
           setErrorMessage("Seu usuário não está autorizado ou está desativado. Entre em contato com o administrador.");
           setIsLoading(false);
           return;
         }
       }
 
-      const { error } = await supabase.auth.signInWithPassword({
-        email: emailLower,
-        password,
-      });
-
       if (!error) {
         // Log success and send WhatsApp notification
         const { logActivity } = await import("@/utils/logger");
         logActivity('login', `Login realizado com sucesso por ${emailLower}`);
-        
+
         supabase.functions.invoke('whatsapp-notification', {
           body: { email: emailLower }
         }).catch(err => console.error("WhatsApp error:", err));
