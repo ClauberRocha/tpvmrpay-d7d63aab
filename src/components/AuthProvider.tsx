@@ -22,20 +22,23 @@ const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<string | null>(null);
+  const [mustChangePassword, setMustChangePassword] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   const fetchUserRole = useCallback(async (email: string) => {
     if (email === "clauber.rocha@mrpay.com.br") {
       setRole("admin");
+      setMustChangePassword(false);
       return;
     }
     const { data } = await supabase
       .from("authorized_users")
-      .select("role")
+      .select("role, must_change_password")
       .eq("email", email.toLowerCase())
-      .single();
+      .maybeSingle();
     setRole(data?.role || "user");
+    setMustChangePassword(data?.must_change_password || false);
   }, []);
 
   const handleLogout = useCallback(async () => {
@@ -46,8 +49,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     await supabase.auth.signOut();
     setUser(null);
     setRole(null);
+    setMustChangePassword(false);
     navigate("/login");
   }, [navigate, user]);
+
+  useEffect(() => {
+    if (user && mustChangePassword) {
+      navigate("/login?force_change=true");
+    }
+  }, [user, mustChangePassword, navigate]);
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
@@ -89,6 +99,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         resetTimer();
       } else {
         setRole(null);
+        setMustChangePassword(false);
       }
       setLoading(false);
       if (!session) navigate("/login");

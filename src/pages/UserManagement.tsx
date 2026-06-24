@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Trash2, Power, PowerOff, Loader2, Edit2, Check, X, Mail, ClipboardList, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Power, PowerOff, Loader2, Edit2, Check, X, Mail, ClipboardList, CheckCircle2, Clock, AlertCircle, Copy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -28,6 +28,8 @@ interface AuthorizedUser {
   auth_user_id?: string | null;
   auth_confirmed_at?: string | null;
   auth_last_sign_in_at?: string | null;
+  temp_password?: string | null;
+  must_change_password?: boolean | null;
 }
 
 const COOLDOWN_SECONDS = 60;
@@ -328,13 +330,14 @@ const UserManagement = () => {
                   <TableHead>Função</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Convite</TableHead>
+                  <TableHead>Senha Temporária</TableHead>
                   <TableHead>Acesso ao Dashboard</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {users.length === 0 ? (
-                  <TableRow><TableCell colSpan={6} className="text-center py-10 text-muted-foreground">Nenhum usuário encontrado.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground">Nenhum usuário encontrado.</TableCell></TableRow>
                 ) : (
                   users.map((u) => {
                     const cooldown = getCooldownRemaining(u);
@@ -368,6 +371,32 @@ const UserManagement = () => {
                           </Badge>
                         </TableCell>
                         <TableCell>{getInvitationCell(u)}</TableCell>
+                        <TableCell>
+                          {u.temp_password ? (
+                            <div className="flex items-center gap-1.5 justify-start">
+                              <code className="text-xs bg-muted/50 border border-border px-1.5 py-0.5 rounded font-mono text-[#fbbf24] select-all">
+                                {u.temp_password}
+                              </code>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6 text-muted-foreground hover:text-white"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(u.temp_password || "");
+                                  toast({
+                                    title: "Copiado",
+                                    description: "Senha temporária copiada para a área de transferência.",
+                                  });
+                                }}
+                                title="Copiar Senha"
+                              >
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
                         <TableCell>{getAccessCell(u)}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
