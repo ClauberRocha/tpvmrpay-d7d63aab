@@ -370,12 +370,13 @@ const UserManagement = () => {
                   <TableHead>Status</TableHead>
                   <TableHead>Convite</TableHead>
                   <TableHead>Acesso ao Dashboard</TableHead>
+                  <TableHead>Senha Temporária</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {users.length === 0 ? (
-                  <TableRow><TableCell colSpan={6} className="text-center py-10 text-muted-foreground">Nenhum usuário encontrado.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground">Nenhum usuário encontrado.</TableCell></TableRow>
                 ) : (
                   users.map((u) => {
                     const cooldown = getCooldownRemaining(u);
