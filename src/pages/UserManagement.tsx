@@ -28,6 +28,8 @@ interface AuthorizedUser {
   auth_user_id?: string | null;
   auth_confirmed_at?: string | null;
   auth_last_sign_in_at?: string | null;
+  temp_password?: string | null;
+  must_change_password?: boolean | null;
 }
 
 const COOLDOWN_SECONDS = 60;
