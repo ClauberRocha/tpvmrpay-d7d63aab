@@ -27,7 +27,9 @@ export type Database = {
           invitation_type: string | null
           invited_at: string | null
           is_active: boolean
+          must_change_password: boolean
           role: string
+          temp_password: string | null
           updated_at: string
         }
         Insert: {
@@ -42,7 +44,9 @@ export type Database = {
           invitation_type?: string | null
           invited_at?: string | null
           is_active?: boolean
+          must_change_password?: boolean
           role?: string
+          temp_password?: string | null
           updated_at?: string
         }
         Update: {
@@ -57,7 +61,9 @@ export type Database = {
           invitation_type?: string | null
           invited_at?: string | null
           is_active?: boolean
+          must_change_password?: boolean
           role?: string
+          temp_password?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -141,7 +147,9 @@ export type Database = {
           invitation_type: string
           invited_at: string
           is_active: boolean
+          must_change_password: boolean
           role: string
+          temp_password: string
         }[]
       }
     }
