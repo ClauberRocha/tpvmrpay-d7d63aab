@@ -411,6 +411,7 @@ const UserManagement = () => {
                         </TableCell>
                         <TableCell>{getInvitationCell(u)}</TableCell>
                         <TableCell>{getAccessCell(u)}</TableCell>
+                        <TableCell>{getTempPasswordCell(u)}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
                             <Button variant="outline" size="icon" onClick={() => { setEditingId(u.id); setEditRole(u.role); }} title="Editar Função" className="h-8 w-8">
