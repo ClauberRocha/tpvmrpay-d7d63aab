@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Trash2, Power, PowerOff, Loader2, Edit2, Check, X, Mail, ClipboardList, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Power, PowerOff, Loader2, Edit2, Check, X, Mail, ClipboardList, CheckCircle2, Clock, AlertCircle, Copy, Eye, EyeOff, KeyRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -28,6 +28,8 @@ interface AuthorizedUser {
   auth_user_id?: string | null;
   auth_confirmed_at?: string | null;
   auth_last_sign_in_at?: string | null;
+  temp_password?: string | null;
+  must_change_password?: boolean | null;
 }
 
 const COOLDOWN_SECONDS = 60;
@@ -50,6 +52,45 @@ const UserManagement = () => {
   const [editRole, setEditRole] = useState<string>("");
   const [isInviting, setIsInviting] = useState<string | null>(null);
   const [now, setNow] = useState(Date.now());
+  const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
+
+  const togglePasswordVisibility = (id: string) =>
+    setVisiblePasswords((prev) => ({ ...prev, [id]: !prev[id] }));
+
+  const copyPassword = async (pwd: string) => {
+    try {
+      await navigator.clipboard.writeText(pwd);
+      toast({ title: "Senha copiada", description: "A senha temporária foi copiada para a área de transferência." });
+    } catch {
+      toast({ title: "Falha ao copiar", variant: "destructive" });
+    }
+  };
+
+  const getTempPasswordCell = (u: AuthorizedUser) => {
+    if (!u.temp_password) {
+      return <span className="text-xs text-muted-foreground">—</span>;
+    }
+    const visible = visiblePasswords[u.id];
+    return (
+      <div className="flex items-center gap-1.5">
+        <KeyRound className="h-3.5 w-3.5 text-[#F9C730]" />
+        <code className="px-2 py-1 rounded bg-muted/50 border border-border/50 text-xs font-mono tracking-wider min-w-[90px] text-center">
+          {visible ? u.temp_password : "••••••••"}
+        </code>
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => togglePasswordVisibility(u.id)} title={visible ? "Ocultar" : "Mostrar"}>
+          {visible ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+        </Button>
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => copyPassword(u.temp_password!)} title="Copiar senha">
+          <Copy className="h-3.5 w-3.5 text-blue-500" />
+        </Button>
+        {u.must_change_password && (
+          <Badge variant="outline" className="text-[10px] text-orange-500 border-orange-500/50 ml-1">
+            trocar no 1º acesso
+          </Badge>
+        )}
+      </div>
+    );
+  };
 
   const isAdmin = role === "admin";
 
@@ -329,12 +370,13 @@ const UserManagement = () => {
                   <TableHead>Status</TableHead>
                   <TableHead>Convite</TableHead>
                   <TableHead>Acesso ao Dashboard</TableHead>
+                  <TableHead>Senha Temporária</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {users.length === 0 ? (
-                  <TableRow><TableCell colSpan={6} className="text-center py-10 text-muted-foreground">Nenhum usuário encontrado.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground">Nenhum usuário encontrado.</TableCell></TableRow>
                 ) : (
                   users.map((u) => {
                     const cooldown = getCooldownRemaining(u);
@@ -369,6 +411,7 @@ const UserManagement = () => {
                         </TableCell>
                         <TableCell>{getInvitationCell(u)}</TableCell>
                         <TableCell>{getAccessCell(u)}</TableCell>
+                        <TableCell>{getTempPasswordCell(u)}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
                             <Button variant="outline" size="icon" onClick={() => { setEditingId(u.id); setEditRole(u.role); }} title="Editar Função" className="h-8 w-8">
