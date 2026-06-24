@@ -122,6 +122,14 @@ const UserManagement = () => {
           title: data?.invitation_type === 'recovery' ? "Redefinição de senha enviada" : "Convite enviado",
           description: data?.message || `E-mail enviado para ${email}.`,
         });
+
+        if (data?.temp_password) {
+          toast({
+            title: "Senha Temporária Gerada",
+            description: `Senha para ${email}: ${data.temp_password} (Copie para testar)`,
+            duration: 15000,
+          });
+        }
       }
       fetchUsers();
     } catch (err: any) {
