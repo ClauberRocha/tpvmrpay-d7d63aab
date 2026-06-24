@@ -50,6 +50,45 @@ const UserManagement = () => {
   const [editRole, setEditRole] = useState<string>("");
   const [isInviting, setIsInviting] = useState<string | null>(null);
   const [now, setNow] = useState(Date.now());
+  const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
+
+  const togglePasswordVisibility = (id: string) =>
+    setVisiblePasswords((prev) => ({ ...prev, [id]: !prev[id] }));
+
+  const copyPassword = async (pwd: string) => {
+    try {
+      await navigator.clipboard.writeText(pwd);
+      toast({ title: "Senha copiada", description: "A senha temporária foi copiada para a área de transferência." });
+    } catch {
+      toast({ title: "Falha ao copiar", variant: "destructive" });
+    }
+  };
+
+  const getTempPasswordCell = (u: AuthorizedUser) => {
+    if (!u.temp_password) {
+      return <span className="text-xs text-muted-foreground">—</span>;
+    }
+    const visible = visiblePasswords[u.id];
+    return (
+      <div className="flex items-center gap-1.5">
+        <KeyRound className="h-3.5 w-3.5 text-[#F9C730]" />
+        <code className="px-2 py-1 rounded bg-muted/50 border border-border/50 text-xs font-mono tracking-wider min-w-[90px] text-center">
+          {visible ? u.temp_password : "••••••••"}
+        </code>
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => togglePasswordVisibility(u.id)} title={visible ? "Ocultar" : "Mostrar"}>
+          {visible ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+        </Button>
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => copyPassword(u.temp_password!)} title="Copiar senha">
+          <Copy className="h-3.5 w-3.5 text-blue-500" />
+        </Button>
+        {u.must_change_password && (
+          <Badge variant="outline" className="text-[10px] text-orange-500 border-orange-500/50 ml-1">
+            trocar no 1º acesso
+          </Badge>
+        )}
+      </div>
+    );
+  };
 
   const isAdmin = role === "admin";
 
