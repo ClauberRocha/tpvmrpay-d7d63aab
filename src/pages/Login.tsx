@@ -403,6 +403,18 @@ const Login = () => {
                   Não tem uma conta? Solicitar acesso
                 </button>
               </div>
+
+              <Button
+                type="button"
+                onClick={() => {
+                  localStorage.setItem("dev_skip_login", "true");
+                  navigate("/");
+                }}
+                variant="outline"
+                className="w-full border-dashed border-[#fbbf24]/50 text-[#fbbf24] hover:bg-[#fbbf24]/10 hover:text-[#fbbf24] h-11 rounded-xl"
+              >
+                Skip Login (Dev Only)
+              </Button>
             </form>
           </>
         )}
