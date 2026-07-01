@@ -1,10 +1,6 @@
-import { Activity, BarChart3, Building2, MapPin, Receipt, Ticket, Users, Wallet, LogOut, User, Settings, ClipboardList } from "lucide-react";
+import { Activity, BarChart3, Building2, MapPin, Receipt, Ticket, Users, Wallet } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { ShieldCheck } from "lucide-react";
 import mrpayLogo from "@/assets/mrpay-logo.png";
-import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
 import { Filtros } from "@/components/dashboard/Filtros";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { TendenciaTemporal } from "@/components/dashboard/TendenciaTemporal";
@@ -14,7 +10,6 @@ import { MapaUF } from "@/components/dashboard/MapaUF";
 import { TopClientes } from "@/components/dashboard/TopClientes";
 import { ClientesInativos } from "@/components/dashboard/ClientesInativos";
 import { AnaliseInsights } from "@/components/dashboard/AnaliseInsights";
-import { useAuth } from "@/components/AuthProvider";
 
 import { ComparativoAnual } from "@/components/dashboard/ComparativoAnual";
 import { ScrollToTopButton } from "@/components/ScrollToTopButton";
@@ -64,16 +59,7 @@ const CATEGORIA_COLOR_MAP = {
 };
 
 const Index = () => {
-  const navigate = useNavigate();
-  const { user, role } = useAuth();
-  const [lastLogin, setLastLogin] = useState<{ date: string; ua: string } | null>(null);
   const [ano, setAno] = useState<Periodo>(tpv.meta.anos[tpv.meta.anos.length - 1] ?? "todos");
-
-  const handleSignOut = async () => {
-    // Auth removed — no-op. Kept to preserve existing UI wiring.
-    // TODO: Remove sign-out button from the header once auth cleanup is finalized.
-    navigate("/");
-  };
   const [meses, setMeses] = useState<number[]>([]);
   const [segmento, setSegmento] = useState("todos");
   const [uf, setUf] = useState("todos");
@@ -106,38 +92,6 @@ const Index = () => {
     }
   }, []);
 
-  useEffect(() => {
-    const fetchLastLogin = async () => {
-      if (!user?.email) return;
-      const { data } = await supabase
-        .from("login_attempts")
-        .select("created_at, user_agent")
-        .eq("email", user.email)
-        .eq("success", true)
-        .order("created_at", { ascending: false })
-        .limit(2) // Pega os dois últimos para garantir que vemos a sessão *anterior* à atual se necessário, 
-        // ou apenas o mais recente se quisermos o "atual" de agora
-        .single();
-      
-      // Vamos buscar o segundo registro (o anterior à sessão atual) se existir
-      const { data: previous } = await supabase
-        .from("login_attempts")
-        .select("created_at, user_agent")
-        .eq("email", user.email)
-        .eq("success", true)
-        .order("created_at", { ascending: false })
-        .range(1, 1)
-        .maybeSingle();
-
-      if (previous) {
-        setLastLogin({
-          date: new Date(previous.created_at).toLocaleString("pt-BR"),
-          ua: previous.user_agent
-        });
-      }
-    };
-    fetchLastLogin();
-  }, [user]);
 
   useEffect(() => {
     localStorage.setItem("tpv-filtros", JSON.stringify(filtros));
@@ -220,19 +174,6 @@ const Index = () => {
                 <p className="mt-1 text-sm text-white font-medium">
                   Dashboard Executivo
                 </p>
-                {user && (
-                  <div className="flex items-center gap-1.5 mt-0.5 text-[14px] text-[#F9C730] px-2 py-0.5 rounded-full w-fit">
-                    <User className="h-4 w-4" />
-                    <span>{user.email}</span>
-                  </div>
-                )}
-                {lastLogin && (
-                  <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                    Último acesso: <span className="text-gray-300">{lastLogin.date}</span>
-                    <span className="opacity-40">({lastLogin.ua.split(') ')[0].split(' (')[0]})</span>
-                  </p>
-                )}
               </div>
             </div>
           </div>
@@ -241,47 +182,9 @@ const Index = () => {
               <Activity className="h-4 w-4 text-primary" />
               Atualizado em {lastUpdate}
             </div>
-            <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => navigate("/users")}
-                disabled={role !== "admin"}
-                className="gap-2 border-primary/50 text-primary hover:bg-primary/10"
-              >
-                <Settings className="h-4 w-4" />
-                Gerenciar Usuários
-              </Button>
-            <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => navigate("/logs")}
-                disabled={role !== "admin"}
-                className="gap-2 border-primary/50 text-primary hover:bg-primary/10"
-              >
-                <ClipboardList className="h-4 w-4" />
-                Logs
-              </Button>
-            <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => navigate("/audit")}
-                disabled={role !== "admin"}
-                className="gap-2 border-primary/50 text-primary hover:bg-primary/10"
-              >
-                <ShieldCheck className="h-4 w-4" />
-                Auditoria
-              </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleSignOut}
-              className="gap-2 border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300"
-            >
-              <LogOut className="h-4 w-4" />
-              Sair
-            </Button>
           </div>
         </header>
+
 
         {/* Filtros */}
         <div className="mb-8">
