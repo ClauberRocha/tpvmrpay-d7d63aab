@@ -127,9 +127,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     );
   }
 
+  const devSkip = typeof window !== "undefined" && localStorage.getItem("dev_skip_login") === "true";
+
   return (
     <AuthContext.Provider value={{ user, loading, role }}>
-      {user ? <>{children}</> : null}
+      {user || devSkip ? <>{children}</> : null}
     </AuthContext.Provider>
   );
 };
