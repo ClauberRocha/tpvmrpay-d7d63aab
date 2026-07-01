@@ -70,10 +70,9 @@ const Index = () => {
   const [ano, setAno] = useState<Periodo>(tpv.meta.anos[tpv.meta.anos.length - 1] ?? "todos");
 
   const handleSignOut = async () => {
-    const { logActivity } = await import("@/utils/logger");
-    logActivity('logout', `O usuário ${user?.email} saiu do sistema`);
-    await supabase.auth.signOut();
-    navigate("/login");
+    // Auth removed — no-op. Kept to preserve existing UI wiring.
+    // TODO: Remove sign-out button from the header once auth cleanup is finalized.
+    navigate("/");
   };
   const [meses, setMeses] = useState<number[]>([]);
   const [segmento, setSegmento] = useState("todos");
