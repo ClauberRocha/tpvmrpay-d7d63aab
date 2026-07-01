@@ -1,10 +1,6 @@
-import { Activity, BarChart3, Building2, MapPin, Receipt, Ticket, Users, Wallet, LogOut, User, Settings, ClipboardList } from "lucide-react";
+import { Activity, BarChart3, Building2, MapPin, Receipt, Ticket, Users, Wallet } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { ShieldCheck } from "lucide-react";
 import mrpayLogo from "@/assets/mrpay-logo.png";
-import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
 import { Filtros } from "@/components/dashboard/Filtros";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { TendenciaTemporal } from "@/components/dashboard/TendenciaTemporal";
@@ -14,7 +10,6 @@ import { MapaUF } from "@/components/dashboard/MapaUF";
 import { TopClientes } from "@/components/dashboard/TopClientes";
 import { ClientesInativos } from "@/components/dashboard/ClientesInativos";
 import { AnaliseInsights } from "@/components/dashboard/AnaliseInsights";
-import { useAuth } from "@/components/AuthProvider";
 
 import { ComparativoAnual } from "@/components/dashboard/ComparativoAnual";
 import { ScrollToTopButton } from "@/components/ScrollToTopButton";
