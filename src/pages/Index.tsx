@@ -59,16 +59,7 @@ const CATEGORIA_COLOR_MAP = {
 };
 
 const Index = () => {
-  const navigate = useNavigate();
-  const { user, role } = useAuth();
-  const [lastLogin, setLastLogin] = useState<{ date: string; ua: string } | null>(null);
   const [ano, setAno] = useState<Periodo>(tpv.meta.anos[tpv.meta.anos.length - 1] ?? "todos");
-
-  const handleSignOut = async () => {
-    // Auth removed — no-op. Kept to preserve existing UI wiring.
-    // TODO: Remove sign-out button from the header once auth cleanup is finalized.
-    navigate("/");
-  };
   const [meses, setMeses] = useState<number[]>([]);
   const [segmento, setSegmento] = useState("todos");
   const [uf, setUf] = useState("todos");
@@ -101,38 +92,6 @@ const Index = () => {
     }
   }, []);
 
-  useEffect(() => {
-    const fetchLastLogin = async () => {
-      if (!user?.email) return;
-      const { data } = await supabase
-        .from("login_attempts")
-        .select("created_at, user_agent")
-        .eq("email", user.email)
-        .eq("success", true)
-        .order("created_at", { ascending: false })
-        .limit(2) // Pega os dois últimos para garantir que vemos a sessão *anterior* à atual se necessário, 
-        // ou apenas o mais recente se quisermos o "atual" de agora
-        .single();
-      
-      // Vamos buscar o segundo registro (o anterior à sessão atual) se existir
-      const { data: previous } = await supabase
-        .from("login_attempts")
-        .select("created_at, user_agent")
-        .eq("email", user.email)
-        .eq("success", true)
-        .order("created_at", { ascending: false })
-        .range(1, 1)
-        .maybeSingle();
-
-      if (previous) {
-        setLastLogin({
-          date: new Date(previous.created_at).toLocaleString("pt-BR"),
-          ua: previous.user_agent
-        });
-      }
-    };
-    fetchLastLogin();
-  }, [user]);
 
   useEffect(() => {
     localStorage.setItem("tpv-filtros", JSON.stringify(filtros));
