@@ -174,19 +174,6 @@ const Index = () => {
                 <p className="mt-1 text-sm text-white font-medium">
                   Dashboard Executivo
                 </p>
-                {user && (
-                  <div className="flex items-center gap-1.5 mt-0.5 text-[14px] text-[#F9C730] px-2 py-0.5 rounded-full w-fit">
-                    <User className="h-4 w-4" />
-                    <span>{user.email}</span>
-                  </div>
-                )}
-                {lastLogin && (
-                  <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                    Último acesso: <span className="text-gray-300">{lastLogin.date}</span>
-                    <span className="opacity-40">({lastLogin.ua.split(') ')[0].split(' (')[0]})</span>
-                  </p>
-                )}
               </div>
             </div>
           </div>
@@ -195,47 +182,9 @@ const Index = () => {
               <Activity className="h-4 w-4 text-primary" />
               Atualizado em {lastUpdate}
             </div>
-            <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => navigate("/users")}
-                disabled={role !== "admin"}
-                className="gap-2 border-primary/50 text-primary hover:bg-primary/10"
-              >
-                <Settings className="h-4 w-4" />
-                Gerenciar Usuários
-              </Button>
-            <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => navigate("/logs")}
-                disabled={role !== "admin"}
-                className="gap-2 border-primary/50 text-primary hover:bg-primary/10"
-              >
-                <ClipboardList className="h-4 w-4" />
-                Logs
-              </Button>
-            <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => navigate("/audit")}
-                disabled={role !== "admin"}
-                className="gap-2 border-primary/50 text-primary hover:bg-primary/10"
-              >
-                <ShieldCheck className="h-4 w-4" />
-                Auditoria
-              </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleSignOut}
-              className="gap-2 border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300"
-            >
-              <LogOut className="h-4 w-4" />
-              Sair
-            </Button>
           </div>
         </header>
+
 
         {/* Filtros */}
         <div className="mb-8">
