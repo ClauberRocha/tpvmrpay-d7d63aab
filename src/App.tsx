@@ -4,26 +4,16 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
-import Login from "./pages/Login.tsx";
 import UserManagement from "./pages/UserManagement.tsx";
-import Signup from "./pages/Signup.tsx";
 import Logs from "./pages/Logs.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import LoginAudit from "./pages/LoginAudit.tsx";
-import { AuthProvider, useAuth } from "./components/AuthProvider";
-import { Navigate } from "react-router-dom";
-
-const AdminRoute = () => {
-  const { role, loading } = useAuth();
-  
-  if (loading) return null;
-  if (role !== "admin") return <Navigate to="/" replace />;
-  
-  return <UserManagement />;
-};
 
 const queryClient = new QueryClient();
 
+// NOTE: Authentication has been removed. All routes are public.
+// TODO: Remove the AuthProvider stub and useAuth calls across pages once
+// the internal role-based UI gates are cleaned up.
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -31,24 +21,10 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<AuthProvider><Index /></AuthProvider>} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/users" element={
-            <AuthProvider>
-              <AdminRoute />
-            </AuthProvider>
-          } />
-          <Route path="/logs" element={
-            <AuthProvider>
-              <Logs />
-            </AuthProvider>
-          } />
-          <Route path="/audit" element={
-            <AuthProvider>
-              <LoginAudit />
-            </AuthProvider>
-          } />
+          <Route path="/" element={<Index />} />
+          <Route path="/users" element={<UserManagement />} />
+          <Route path="/logs" element={<Logs />} />
+          <Route path="/audit" element={<LoginAudit />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
