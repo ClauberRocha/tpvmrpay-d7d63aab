@@ -106,7 +106,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setMustChangePassword(false);
       }
       setLoading(false);
-      if (!session) navigate("/login");
+      if (!session && !devSkip) navigate("/login");
     });
 
     return () => {
