@@ -4,7 +4,6 @@ import { BrowserRouter } from "react-router-dom";
 
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { Toaster as Sonner } from "@/components/ui/sonner";
-import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 const queryClient = new QueryClient({
@@ -30,7 +29,6 @@ export function AppProviders({ children }: AppProvidersProps) {
     <AppErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <Toaster />
           <Sonner />
           <BrowserRouter>
             {children}
