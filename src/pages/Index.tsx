@@ -1,4 +1,6 @@
-import { Activity, BarChart3, Building2, MapPin, Receipt, Ticket, Users, Wallet } from "lucide-react";
+import { Activity, BarChart3, Building2, Download, MapPin, Receipt, Ticket, Users, Wallet } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { exportDashboardPdf } from "@/utils/exportPdf";
 import { useEffect, useMemo, useState } from "react";
 import mrpayLogo from "@/assets/mrpay-logo.png";
 import { Filtros } from "@/components/dashboard/Filtros";
