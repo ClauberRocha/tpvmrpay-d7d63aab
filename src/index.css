@@ -43,8 +43,20 @@
     --destructive: 0 75% 58%;
     --destructive-foreground: 210 20% 98%;
 
+    --danger: 0 75% 58%;
+    --danger-foreground: 210 20% 98%;
+
     --success: 152 70% 48%;
+    --success-foreground: 210 20% 98%;
+
     --warning: 38 95% 58%;
+    --warning-foreground: 222 47% 8%;
+
+    --info: 195 92% 55%;
+    --info-foreground: 222 47% 8%;
+
+    --neutral: 222 20% 14%;
+    --neutral-foreground: 215 16% 60%;
 
     --border: 222 20% 18%;
     --input: 222 20% 18%;
@@ -93,6 +105,21 @@
     --border: 214 32% 88%;
     --input: 214 32% 88%;
     --ring: 45 100% 50%;
+
+    --danger: 354 70% 50%;
+    --danger-foreground: 210 40% 98%;
+
+    --success: 142 70% 40%;
+    --success-foreground: 210 40% 98%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 222 47% 11%;
+
+    --info: 199 89% 48%;
+    --info-foreground: 210 40% 98%;
+
+    --neutral: 210 40% 96%;
+    --neutral-foreground: 222 47% 11%;
   }
 
   .light body {
@@ -135,6 +162,21 @@
     --border: 222 20% 18%;
     --input: 222 20% 18%;
     --ring: 45 100% 55%;
+
+    --danger: 0 75% 58%;
+    --danger-foreground: 210 20% 98%;
+
+    --success: 152 70% 48%;
+    --success-foreground: 210 20% 98%;
+
+    --warning: 38 95% 58%;
+    --warning-foreground: 222 47% 8%;
+
+    --info: 195 92% 55%;
+    --info-foreground: 222 47% 8%;
+
+    --neutral: 222 20% 14%;
+    --neutral-foreground: 215 16% 60%;
   }
 }
 

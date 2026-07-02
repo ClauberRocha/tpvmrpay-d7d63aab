@@ -1,5 +1,6 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+
 import {
   dimensionRanking,
   formatBRL,
@@ -15,6 +16,12 @@ const MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "O
 const YELLOW: [number, number, number] = [249, 199, 48];
 const DARK: [number, number, number] = [24, 24, 27];
 const MUTED: [number, number, number] = [110, 110, 120];
+
+interface jsPDFWithAutoTable extends jsPDF {
+  lastAutoTable: {
+    finalY: number;
+  };
+}
 
 function periodoLabel(f: Filtros): string {
   const mesesLbl = f.meses.length ? f.meses.map((m) => MESES[m - 1]).join(", ") : "Todos os meses";
@@ -92,7 +99,7 @@ export function exportDashboardPdf(filtros: Filtros) {
     margin: { left: margin, right: margin },
   });
 
-  y = (doc as any).lastAutoTable.finalY + 24;
+  y = (doc as jsPDFWithAutoTable).lastAutoTable.finalY + 24;
 
   // Tendência mensal
   const serie = monthlySeries(filtros);
@@ -111,7 +118,7 @@ export function exportDashboardPdf(filtros: Filtros) {
       styles: { fontSize: 9, cellPadding: 5 },
       margin: { left: margin, right: margin },
     });
-    y = (doc as any).lastAutoTable.finalY + 24;
+    y = (doc as jsPDFWithAutoTable).lastAutoTable.finalY + 24;
   }
 
   // Top segmentos
@@ -132,7 +139,7 @@ export function exportDashboardPdf(filtros: Filtros) {
       styles: { fontSize: 9, cellPadding: 5 },
       margin: { left: margin, right: margin },
     });
-    y = (doc as any).lastAutoTable.finalY + 24;
+    y = (doc as jsPDFWithAutoTable).lastAutoTable.finalY + 24;
   }
 
   // Top clientes
@@ -153,7 +160,7 @@ export function exportDashboardPdf(filtros: Filtros) {
       styles: { fontSize: 9, cellPadding: 5 },
       margin: { left: margin, right: margin },
     });
-    y = (doc as any).lastAutoTable.finalY + 24;
+    y = (doc as jsPDFWithAutoTable).lastAutoTable.finalY + 24;
   }
 
   // Top UFs

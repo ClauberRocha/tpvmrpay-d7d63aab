@@ -1,5 +1,6 @@
-import { formatBRL, formatPct } from "@/data/tpv";
 import { TrendingDown, TrendingUp, type LucideIcon } from "lucide-react";
+
+import { formatBRL, formatPct } from "@/data/tpv";
 import { cn } from "@/lib/utils";
 
 interface KpiCardProps {

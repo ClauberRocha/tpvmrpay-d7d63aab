@@ -3,6 +3,7 @@ import {
   Bar, BarChart, CartesianGrid, Cell, LabelList, Legend, ReferenceLine,
   ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
+
 import { formatBRL, formatBRLCompact, MESES, tpv } from "@/data/tpv";
 
 const COR_2025 = "#3070cd"; // azul

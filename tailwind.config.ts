@@ -1,4 +1,6 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
+
 
 export default {
   darkMode: ["class"],
@@ -17,6 +19,21 @@ export default {
         sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
         display: ["'Space Grotesk'", "Inter", "sans-serif"],
         mono: ["'JetBrains Mono'", "ui-monospace", "monospace"],
+      },
+      spacing: {
+        // Design system custom spacing scale
+        xs: "0.25rem",   // 4px
+        sm: "0.5rem",    // 8px
+        md: "1.0rem",    // 16px
+        lg: "1.5rem",    // 24px
+        xl: "2.0rem",    // 32px
+        "2xl": "3.0rem", // 48px
+        "3xl": "4.0rem", // 64px
+
+        // Semantic layout spacing tokens
+        "layout-gap": "1.5rem",
+        "card-padding": "1.5rem",
+        "section-gap": "2.0rem",
       },
       colors: {
         border: "hsl(var(--border))",
@@ -37,8 +54,26 @@ export default {
           violet: "hsl(var(--accent-violet))",
           yellow: "hsl(var(--primary))",
         },
-        success: "hsl(var(--success))",
-        warning: "hsl(var(--warning))",
+        danger: {
+          DEFAULT: "hsl(var(--danger))",
+          foreground: "hsl(var(--danger-foreground))",
+        },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
+        info: {
+          DEFAULT: "hsl(var(--info))",
+          foreground: "hsl(var(--info-foreground))",
+        },
+        neutral: {
+          DEFAULT: "hsl(var(--neutral))",
+          foreground: "hsl(var(--neutral-foreground))",
+        },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
@@ -103,5 +138,5 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindcssAnimate],
 } satisfies Config;

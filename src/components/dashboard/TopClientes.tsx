@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+
 import { dimensionRanking, formatBRL, formatNumber, getClienteCategoriaMap, tpv, type CategoriaCliente, type Filtros } from "@/data/tpv";
 
 const MESES_LBL = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];

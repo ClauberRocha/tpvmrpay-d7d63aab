@@ -1,5 +1,6 @@
 import { useMemo, useCallback } from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+
 import { dimensionRanking, formatBRL, formatBRLCompact, tpv, type Filtros } from "@/data/tpv";
 
 const palette = [

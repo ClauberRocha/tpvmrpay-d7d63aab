@@ -1,25 +1,24 @@
 import { Activity, BarChart3, Building2, Download, MapPin, Receipt, Ticket, Users, Wallet } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { exportDashboardPdf } from "@/utils/exportPdf";
 import { useEffect, useMemo, useState } from "react";
+
 import mrpayLogo from "@/assets/mrpay-logo.png";
+import { AnaliseInsights } from "@/components/dashboard/AnaliseInsights";
+import { ClientesInativos } from "@/components/dashboard/ClientesInativos";
+import { ComparativoAnual } from "@/components/dashboard/ComparativoAnual";
 import { Filtros } from "@/components/dashboard/Filtros";
 import { KpiCard } from "@/components/dashboard/KpiCard";
-import { TendenciaTemporal } from "@/components/dashboard/TendenciaTemporal";
-import { ShareSegmento } from "@/components/dashboard/ShareSegmento";
-import { RankBars } from "@/components/dashboard/RankBars";
 import { MapaUF } from "@/components/dashboard/MapaUF";
+import { RankBars } from "@/components/dashboard/RankBars";
+import { ShareSegmento } from "@/components/dashboard/ShareSegmento";
+import { TendenciaTemporal } from "@/components/dashboard/TendenciaTemporal";
 import { TopClientes } from "@/components/dashboard/TopClientes";
-import { ClientesInativos } from "@/components/dashboard/ClientesInativos";
-import { AnaliseInsights } from "@/components/dashboard/AnaliseInsights";
-
-import { ComparativoAnual } from "@/components/dashboard/ComparativoAnual";
 import { ScrollToTopButton } from "@/components/ScrollToTopButton";
-
+import { Button } from "@/components/ui/button";
 import {
   dimensionRanking, totalsFiltered, tpv,
   type Filtros as FiltrosType, type Periodo,
 } from "@/data/tpv";
+import { exportDashboardPdf } from "@/utils/exportPdf";
 
 const MESES_LBL = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 

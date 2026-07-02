@@ -1,7 +1,8 @@
-import { useMemo } from "react";
-import { tpv, type Filtros } from "@/data/tpv";
 import { AlertCircle } from "lucide-react";
+import { useMemo } from "react";
+
 import owners from "@/data/clienteProprietario.json";
+import { tpv, type Filtros } from "@/data/tpv";
 
 const ownersMap = owners as Record<string, string>;
 

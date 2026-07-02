@@ -1,9 +1,10 @@
-import { useMemo, useState, useEffect } from "react";
 import { Target, TrendingUp, AlertTriangle, Pencil, Check, X } from "lucide-react";
-import { formatBRLCompact, monthlySeries, totalsFiltered, tpv, type Filtros } from "@/data/tpv";
-import { cn } from "@/lib/utils";
+import { useMemo, useState, useEffect } from "react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { formatBRLCompact, monthlySeries, totalsFiltered, tpv, type Filtros } from "@/data/tpv";
+import { cn } from "@/lib/utils";
 
 interface Props {
   filtros: Filtros;

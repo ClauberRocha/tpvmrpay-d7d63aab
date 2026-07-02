@@ -1,5 +1,6 @@
-import { useMemo } from "react";
 import { ArrowDownRight, ArrowUpRight, Sparkles, TrendingUp, Users } from "lucide-react";
+import { useMemo } from "react";
+
 import { dimensionRanking, formatBRL, formatBRLCompact, tpv, type Filtros } from "@/data/tpv";
 
 export function MapaUF({ filtros }: { filtros: Filtros }) {

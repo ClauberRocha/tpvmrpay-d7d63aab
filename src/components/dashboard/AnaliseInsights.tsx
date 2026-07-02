@@ -1,12 +1,14 @@
-import { useMemo, useState } from "react";
 import { Lightbulb, Target, TrendingUp, Users, Crown, Sparkles, Brain, AlertTriangle, TrendingDown, Loader2, Zap } from "lucide-react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
+
+import { Slider } from "@/components/ui/slider";
 import {
   dimensionRanking, formatBRL, formatNumber, monthlySeries,
   tpv, type Filtros,
 } from "@/data/tpv";
-import { Slider } from "@/components/ui/slider";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+
 
 const MESES_LBL = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
@@ -153,11 +155,13 @@ export function AnaliseInsights({ filtros }: { filtros: Filtros }) {
       };
       const { data, error } = await supabase.functions.invoke("analise-ia", { body: payload });
       if (error) throw error;
-      if ((data as any)?.error) throw new Error((data as any).error);
+      const dataObj = data as { error?: string } | null;
+      if (dataObj?.error) throw new Error(dataObj.error);
       setIaResult(data as AnaliseIA);
-    } catch (e: any) {
-      console.error(e);
-      toast.error(e?.message || "Erro ao executar análise IA");
+    } catch (e) {
+      const err = e as { message?: string };
+      console.error(err);
+      toast.error(err.message || "Erro ao executar análise IA");
     } finally {
       setIaLoading(false);
     }

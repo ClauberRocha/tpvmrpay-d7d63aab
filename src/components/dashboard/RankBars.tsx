@@ -2,6 +2,7 @@ import { useMemo, useCallback } from "react";
 import {
   Bar, BarChart, Cell, CartesianGrid, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
+
 import { dimensionRanking, formatBRL, formatBRLCompact, tpv, type Filtros, type TsRowK } from "@/data/tpv";
 
 interface RankBarsProps {
@@ -23,7 +24,7 @@ export function RankBars({ filtros, source, title, subtitle, color = "hsl(var(--
 
   const tooltipFormatter = useCallback((v: number) => [formatBRL(v), "TPV"], []);
 
-  const yAxisTickRenderer = useCallback((props: any) => {
+  const yAxisTickRenderer = useCallback((props: { x: number; y: number; payload: { value: string } }) => {
     const { x, y, payload } = props;
     const fill = colorMap?.[payload.value] ?? "hsl(var(--muted-foreground))";
     const label = payload.value.length > 22 ? payload.value.slice(0, 20) + "…" : payload.value;

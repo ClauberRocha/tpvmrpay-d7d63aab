@@ -3,6 +3,7 @@ import {
   Area, AreaChart, CartesianGrid, ResponsiveContainer,
   Tooltip, XAxis, YAxis,
 } from "recharts";
+
 import { formatBRL, formatBRLCompact, MESES, monthlySeries, type Filtros } from "@/data/tpv";
 
 export function TendenciaTemporal({ filtros }: { filtros: Filtros }) {
