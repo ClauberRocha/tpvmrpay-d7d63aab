@@ -1,4 +1,6 @@
-import { Activity, BarChart3, Building2, MapPin, Receipt, Ticket, Users, Wallet } from "lucide-react";
+import { Activity, BarChart3, Building2, Download, MapPin, Receipt, Ticket, Users, Wallet } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { exportDashboardPdf } from "@/utils/exportPdf";
 import { useEffect, useMemo, useState } from "react";
 import mrpayLogo from "@/assets/mrpay-logo.png";
 import { Filtros } from "@/components/dashboard/Filtros";
@@ -177,7 +179,15 @@ const Index = () => {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4">
+            <Button
+              onClick={() => exportDashboardPdf(filtros)}
+              className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+              size="sm"
+            >
+              <Download className="h-4 w-4" />
+              Baixar PDF
+            </Button>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Activity className="h-4 w-4 text-primary" />
               Atualizado em {lastUpdate}
