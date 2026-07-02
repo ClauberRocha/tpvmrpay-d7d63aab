@@ -2,13 +2,11 @@ import { Lightbulb, Target, TrendingUp, Users, Crown, Sparkles, Brain, AlertTria
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { Slider } from "@/components/ui/slider";
-import {
-  dimensionRanking, formatBRL, formatNumber, monthlySeries,
-  tpv, type Filtros,
-} from "@/data/tpv";
-import { supabase } from "@/integrations/supabase/client";
+import { DashboardService } from "../../services/DashboardService";
 
+import { Slider } from "@/components/ui/slider";
+import { formatBRL, formatNumber, monthlySeries, type Filtros } from "@/data/tpv";
+import { supabase } from "@/integrations/supabase/client";
 
 const MESES_LBL = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
@@ -28,101 +26,9 @@ export function AnaliseInsights({ filtros }: { filtros: Filtros }) {
   const [taxaPct, setTaxaPct] = useState<number>(2);
   const [iaLoading, setIaLoading] = useState(false);
   const [iaResult, setIaResult] = useState<AnaliseIA | null>(null);
+
   const insights = useMemo(() => {
-    // Série mensal (sem filtro de seg/uf para visão macro)
-    const macroF = { ...filtros, segmento: "todos", uf: "todos" };
-    const serie = monthlySeries(macroF);
-    const total = serie.reduce((s, p) => s + p.tpv, 0);
-    const media = serie.length ? total / serie.length : 0;
-
-    // Projeção 2026: crescimento de 2% ao mês sobre o mesmo mês de 2025
-    // Sempre projeta os 3 meses seguintes ao último mês fechado de 2026
-    const meses2026 = tpv.meta.mesesPorAno["2026"] ?? [];
-    const ultimoMes2026 = meses2026.length ? Math.max(...meses2026) : 0;
-    const tpv2025PorMes = new Map<number, number>();
-    for (const r of tpv.totalTs) {
-      if (r.ano === 2025) tpv2025PorMes.set(r.mes, (tpv2025PorMes.get(r.mes) ?? 0) + r.tpv);
-    }
-    const TAXA = taxaPct / 100;
-    const projetar = (mes: number) => {
-      const base = tpv2025PorMes.get(mes) ?? 0;
-      return base * Math.pow(1 + TAXA, mes); // crescimento composto a.m.
-    };
-    const m1 = ((ultimoMes2026) % 12) + 1;
-    const m2 = (m1 % 12) + 1;
-    const m3 = (m2 % 12) + 1;
-    const proj1 = projetar(m1);
-    const proj2 = projetar(m2);
-    const proj3 = projetar(m3);
-
-    // Mantém slope para texto descritivo da tendência observada
-    let slope = 0;
-    if (serie.length >= 2) {
-      const n = serie.length;
-      const xs = serie.map((_, i) => i);
-      const ys = serie.map((p) => p.tpv);
-      const mx = xs.reduce((a, b) => a + b, 0) / n;
-      const my = ys.reduce((a, b) => a + b, 0) / n;
-      const num = xs.reduce((a, x, i) => a + (x - mx) * (ys[i] - my), 0);
-      const den = xs.reduce((a, x) => a + (x - mx) ** 2, 0);
-      slope = den > 0 ? num / den : 0;
-    }
-    const ultimo = serie[serie.length - 1];
-
-    const labelProj1 = `${MESES_LBL[m1 - 1]}/26`;
-    const labelProj2 = `${MESES_LBL[m2 - 1]}/26`;
-    const labelProj3 = `${MESES_LBL[m3 - 1]}/26`;
-
-    // 80/20 — Clientes
-    const clientes = dimensionRanking(tpv.clienteTs, filtros);
-    const totalClientes = clientes.reduce((s, c) => s + c.tpv, 0);
-    let acc = 0;
-    let n80 = 0;
-    for (const c of clientes) {
-      acc += c.tpv;
-      n80++;
-      if (acc / totalClientes >= 0.8) break;
-    }
-    const pct80 = clientes.length > 0 ? (n80 / clientes.length) * 100 : 0;
-    const top5Clientes = clientes.slice(0, 5);
-    const top5Soma = top5Clientes.reduce((s, c) => s + c.tpv, 0);
-    const top5Pct = totalClientes > 0 ? (top5Soma / totalClientes) * 100 : 0;
-
-    // Segmentos
-    const segs = dimensionRanking(tpv.segmentoTs, { ...filtros, segmento: "todos" });
-    const totalSeg = segs.reduce((s, x) => s + x.tpv, 0);
-    const segLider = segs[0];
-    const segLiderPct = segLider && totalSeg > 0 ? (segLider.tpv / totalSeg) * 100 : 0;
-
-    // UFs
-    const ufs = dimensionRanking(tpv.ufTs, { ...filtros, uf: "todos" });
-    const totalUF = ufs.reduce((s, x) => s + x.tpv, 0);
-    const ufLider = ufs[0];
-    const ufLiderPct = ufLider && totalUF > 0 ? (ufLider.tpv / totalUF) * 100 : 0;
-    const ufsBaixaCobertura = ufs.filter((u) => u.tpv / totalUF < 0.02);
-
-    // Proprietários
-    const props = dimensionRanking(tpv.proprietarioTs, filtros);
-    const totalProp = props.reduce((s, x) => s + x.tpv, 0);
-    const propLider = props[0];
-    const propLiderPct = propLider && totalProp > 0 ? (propLider.tpv / totalProp) * 100 : 0;
-    const propBaixaPerf = props.filter((p) => p.tpv / totalProp < 0.05);
-
-    // Categorias (Diamante/Ouro/Prata/Bronze)
-    const cats = dimensionRanking(tpv.categoriaTs, filtros);
-    const diamante = cats.find((c) => c.name === "Diamante");
-    const totalCat = cats.reduce((s, x) => s + x.tpv, 0);
-    const diamPct = diamante && totalCat > 0 ? (diamante.tpv / totalCat) * 100 : 0;
-
-    return {
-      total, media, slope, ultimo,
-      proj1, proj2, proj3, labelProj1, labelProj2, labelProj3,
-      clientes, n80, pct80, top5Clientes, top5Pct,
-      segLider, segLiderPct,
-      ufLider, ufLiderPct, ufsBaixaCobertura,
-      propLider, propLiderPct, propBaixaPerf,
-      diamante, diamPct,
-    };
+    return DashboardService.getStrategicInsights(filtros, taxaPct);
   }, [filtros, taxaPct]);
 
   const tendenciaTxt = insights.slope > 0
@@ -304,7 +210,7 @@ export function AnaliseInsights({ filtros }: { filtros: Filtros }) {
                     Enquanto um cliente comum pode esperar 24h ou 48h por uma resposta, o cliente Diamante tem garantia de retorno em minutos ou poucas horas. Em caso de erros ou falhas técnicas, o chamado do cliente Diamante "fura a fila" e vai direto para os especialistas.
                   </span>
                   <span className="mt-2 block text-foreground/80">
-                    <span className="font-semibold text-foreground">Em resumo:</span> É tratar o risco proporcionalmente ao faturamento que ele gera. Se eles trazem 60% do dinheiro, eles recebem 60% (ou mais) da atenção e rapidez da operação.
+                    <span className="font-semibold text-foreground">Em resumo:</span> É tratar o risco proporcionalmente ao faturamento que ele gera. Se eles trazem 60% do dinheiro, eles recebem 60% (ou mais) da atenção e rapidez da operation.
                   </span>
                 </span>
               </li>
@@ -332,7 +238,7 @@ export function AnaliseInsights({ filtros }: { filtros: Filtros }) {
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/20 text-xs font-bold text-primary">1</span>
               <span>
                 <span className="font-semibold text-foreground">Blindar clientes OURO e DIAMANTE:</span>{" "}
-                Estruturar programa de relacionamento com benefícios exclusivos (taxas, liquidez, antecipação), além de contato proativo para redução de churn (perda/cancelamento de clientes), aumento de retenção e constante crescimento do TPV.
+                Estruturar programa de relacionamento com benefits exclusivos (taxas, liquidez, antecipação), além de contato proativo para redução de churn (perda/cancelamento de clientes), aumento de retenção e constante crescimento do TPV.
               </span>
             </li>
             <li className="flex gap-3">

@@ -1,54 +1,17 @@
 import { ArrowDownRight, ArrowUpRight, Sparkles, TrendingUp, Users } from "lucide-react";
 import { useMemo } from "react";
 
-import { dimensionRanking, formatBRL, formatBRLCompact, tpv, type Filtros } from "@/data/tpv";
+import { DashboardService } from "../../services/DashboardService";
+
+import { formatBRL, formatBRLCompact } from "@/data/tpv";
+import type { Filtros } from "@/data/tpv";
 
 export function MapaUF({ filtros }: { filtros: Filtros }) {
-  const items = useMemo(() => {
-    const f = { ...filtros, uf: "todos" };
-    const arr = dimensionRanking(tpv.ufTs, f);
-    const max = Math.max(...arr.map((a) => a.tpv), 1);
-    return arr.map((a) => ({ ...a, intensity: a.tpv / max }));
+  const data = useMemo(() => {
+    return DashboardService.getMapaUFData(filtros);
   }, [filtros]);
 
-  // Ranking de crescimento (vs ano anterior, mesmos meses)
-  const crescimento = useMemo(() => {
-    if (filtros.ano === "todos") return [];
-    const anoAtual = filtros.ano as number;
-    const anoAnt = anoAtual - 1;
-    if (!tpv.meta.anos.includes(anoAnt)) return [];
-    const fAtual = { ...filtros, uf: "todos" };
-    const fAnt = { ...filtros, ano: anoAnt, uf: "todos" };
-    const atual = new Map(dimensionRanking(tpv.ufTs, fAtual).map((x) => [x.name, x.tpv]));
-    const ant = new Map(dimensionRanking(tpv.ufTs, fAnt).map((x) => [x.name, x.tpv]));
-    const out: { name: string; atual: number; ant: number; pct: number; abs: number }[] = [];
-    for (const [name, a] of atual) {
-      const p = ant.get(name) ?? 0;
-      const abs = a - p;
-      const pct = p > 0 ? (abs / p) * 100 : a > 0 ? 100 : 0;
-      out.push({ name, atual: a, ant: p, abs, pct });
-    }
-    return out.sort((a, b) => b.pct - a.pct);
-  }, [filtros]);
-
-  // Oportunidade: alto ticket médio com baixa participação no TPV total
-  const oportunidade = useMemo(() => {
-    const total = items.reduce((s, x) => s + x.tpv, 0);
-    return items
-      .map((x) => {
-        const ticket = x.tx > 0 ? x.tpv / x.tx : 0;
-        const share = total > 0 ? x.tpv / total : 0;
-        // score: ticket alto + baixa participação
-        const score = ticket * (1 - share);
-        return { ...x, ticket, share, score };
-      })
-      .sort((a, b) => b.score - a.score);
-  }, [items]);
-
-  // Densidade comercial: transações por UF
-  const densidade = useMemo(() => {
-    return [...items].sort((a, b) => b.tx - a.tx);
-  }, [items]);
+  const { items, crescimento, oportunidade, densidade } = data;
 
   const total = items.reduce((s, x) => s + x.tpv, 0);
   const lider = items[0];

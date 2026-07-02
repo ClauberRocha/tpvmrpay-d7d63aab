@@ -1,9 +1,9 @@
-import { useDashboardFilter } from "./DashboardFilterContext";
 
-import { ComparativoAnual } from "@/components/dashboard/ComparativoAnual";
-import { RankBars } from "@/components/dashboard/RankBars";
-import { ShareSegmento } from "@/components/dashboard/ShareSegmento";
-import { TendenciaTemporal } from "@/components/dashboard/TendenciaTemporal";
+import { ComparativoAnual } from "./components/charts/ComparativoAnual";
+import { RankBars } from "./components/charts/RankBars";
+import { ShareSegmento } from "./components/charts/ShareSegmento";
+import { TendenciaTemporal } from "./components/charts/TendenciaTemporal";
+import { useDashboardFilter } from "./DashboardFilterContext";
 
 const CATEGORIA_COLOR_MAP = {
   Diamante: "#3070cd",

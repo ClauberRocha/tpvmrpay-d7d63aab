@@ -1,6 +1,8 @@
 import { BarChart3, Building2, MapPin } from "lucide-react";
 import { useMemo } from "react";
 
+import { Filtros } from "./components/filters/Filtros";
+import { AtingimentoMeta } from "./components/insights/AtingimentoMeta";
 import { DashboardCharts } from "./DashboardCharts";
 import { DashboardFilterProvider, useDashboardFilter } from "./DashboardFilterContext";
 import { DashboardHeader } from "./DashboardHeader";
@@ -8,7 +10,6 @@ import { DashboardInsights } from "./DashboardInsights";
 import { DashboardKPIs } from "./DashboardKPIs";
 import { DashboardMaps } from "./DashboardMaps";
 
-import { Filtros } from "@/components/dashboard/Filtros";
 import { ScrollToTopButton } from "@/components/ScrollToTopButton";
 import { dimensionRanking, tpv } from "@/data/tpv";
 
@@ -35,6 +36,11 @@ const DashboardContent = () => {
 
         {/* KPIs */}
         <DashboardKPIs />
+
+        {/* Goal Targets Progress */}
+        <section className="mb-6">
+          <AtingimentoMeta filtros={filtros} />
+        </section>
 
         {/* Charts & Comparisons */}
         <DashboardCharts />

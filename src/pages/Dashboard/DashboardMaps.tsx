@@ -1,7 +1,7 @@
+import { RankBars } from "./components/charts/RankBars";
+import { MapaUF } from "./components/maps/MapaUF";
 import { useDashboardFilter } from "./DashboardFilterContext";
 
-import { MapaUF } from "@/components/dashboard/MapaUF";
-import { RankBars } from "@/components/dashboard/RankBars";
 
 export function DashboardMaps() {
   const { filtros } = useDashboardFilter();

@@ -1,8 +1,8 @@
-import { useDashboardFilter } from "./DashboardFilterContext";
 
-import { AnaliseInsights } from "@/components/dashboard/AnaliseInsights";
-import { ClientesInativos } from "@/components/dashboard/ClientesInativos";
-import { TopClientes } from "@/components/dashboard/TopClientes";
+import { AnaliseInsights } from "./components/insights/AnaliseInsights";
+import { ClientesInativos } from "./components/insights/ClientesInativos";
+import { TopClientes } from "./components/insights/TopClientes";
+import { useDashboardFilter } from "./DashboardFilterContext";
 
 export function DashboardInsights() {
   const { filtros } = useDashboardFilter();

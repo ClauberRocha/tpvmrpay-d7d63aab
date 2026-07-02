@@ -1,5 +1,7 @@
-import { TrendingDown, TrendingUp, type LucideIcon } from "lucide-react";
+import { Info, TrendingDown, TrendingUp, type LucideIcon } from "lucide-react";
 
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatBRL, formatPct } from "@/data/tpv";
 import { cn } from "@/lib/utils";
 
@@ -12,6 +14,8 @@ interface KpiCardProps {
   accent?: "yellow" | "cyan" | "magenta" | "green" | "violet";
   subtitle?: string;
   comparisonLabel?: string;
+  loading?: boolean;
+  tooltip?: string;
 }
 
 const accentMap = {
@@ -22,7 +26,36 @@ const accentMap = {
   violet: "text-chart-violet bg-chart-violet/10",
 };
 
-export function KpiCard({ label, value, previous, icon: Icon, format = "currency", accent = "yellow", subtitle, comparisonLabel = "vs. ano anterior" }: KpiCardProps) {
+export function KpiCard({
+  label,
+  value,
+  previous,
+  icon: Icon,
+  format = "currency",
+  accent = "yellow",
+  subtitle,
+  comparisonLabel = "vs. ano anterior",
+  loading = false,
+  tooltip,
+}: KpiCardProps) {
+  if (loading) {
+    return (
+      <div className="kpi-card">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-start justify-between">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-8 w-8 rounded-lg" />
+          </div>
+          <Skeleton className="h-8 w-32" />
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-4 w-12" />
+            <Skeleton className="h-4 w-20" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const hasDelta = previous !== undefined && previous > 0;
   const delta = hasDelta ? ((value - previous!) / previous!) * 100 : 0;
   const positivo = delta >= 0;
@@ -36,8 +69,20 @@ export function KpiCard({ label, value, previous, icon: Icon, format = "currency
     <div className="kpi-card group">
       <div className="relative z-10 flex flex-col gap-4">
         <div className="flex items-start justify-between">
-          <span className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+          <span className="text-xs font-medium uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
             {label}
+            {tooltip && (
+              <Tooltip delayDuration={300}>
+                <TooltipTrigger asChild>
+                  <button className="text-muted-foreground/60 hover:text-foreground transition-colors cursor-help inline-flex items-center">
+                    <Info className="h-3.5 w-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-[220px] text-xs leading-normal bg-popover text-popover-foreground border border-border/80 shadow-md">
+                  {tooltip}
+                </TooltipContent>
+              </Tooltip>
+            )}
           </span>
           <div className={cn("rounded-lg p-2", accentMap[accent])}>
             <Icon className="h-4 w-4" />
@@ -54,7 +99,7 @@ export function KpiCard({ label, value, previous, icon: Icon, format = "currency
               <div
                 className={cn(
                   "flex items-center gap-1 rounded-md px-2 py-1 font-semibold",
-                  positivo ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"
+                  positivo ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive",
                 )}
               >
                 {positivo ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
