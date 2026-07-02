@@ -1,7 +1,6 @@
 import { Download } from "lucide-react";
-import { useMemo } from "react";
 
-import { DashboardService } from "../../services/DashboardService";
+import { useDashboard } from "../../hooks/useDashboard";
 
 import { formatBRL, formatNumber } from "@/data/tpv";
 import type { CategoriaCliente, Filtros } from "@/data/tpv";
@@ -24,9 +23,7 @@ const STATUS_STYLES = {
 };
 
 export function TopClientes({ filtros }: { filtros: Filtros }) {
-  const items = useMemo(() => {
-    return DashboardService.getTopClientes(filtros);
-  }, [filtros]);
+  const { topClientes: items } = useDashboard();
 
   const handleExport = () => {
     const csvData = items.map((c, idx) => [

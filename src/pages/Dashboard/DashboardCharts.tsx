@@ -3,7 +3,7 @@ import { ComparativoAnual } from "./components/charts/ComparativoAnual";
 import { RankBars } from "./components/charts/RankBars";
 import { ShareSegmento } from "./components/charts/ShareSegmento";
 import { TendenciaTemporal } from "./components/charts/TendenciaTemporal";
-import { useDashboardFilter } from "./DashboardFilterContext";
+import { useDashboard } from "./hooks/useDashboard";
 
 const CATEGORIA_COLOR_MAP = {
   Diamante: "#3070cd",
@@ -13,7 +13,7 @@ const CATEGORIA_COLOR_MAP = {
 };
 
 export function DashboardCharts() {
-  const { filtros } = useDashboardFilter();
+  const { filtros } = useDashboard();
   return (
     <>
       {/* Linha 1: Tendência + Share */}

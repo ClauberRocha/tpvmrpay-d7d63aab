@@ -1,15 +1,12 @@
 import { ArrowDownRight, ArrowUpRight, Sparkles, TrendingUp, Users } from "lucide-react";
-import { useMemo } from "react";
 
-import { DashboardService } from "../../services/DashboardService";
+import { useDashboard } from "../../hooks/useDashboard";
 
 import { formatBRL, formatBRLCompact } from "@/data/tpv";
 import type { Filtros } from "@/data/tpv";
 
 export function MapaUF({ filtros }: { filtros: Filtros }) {
-  const data = useMemo(() => {
-    return DashboardService.getMapaUFData(filtros);
-  }, [filtros]);
+  const { mapaData: data } = useDashboard();
 
   const { items, crescimento, oportunidade, densidade } = data;
 

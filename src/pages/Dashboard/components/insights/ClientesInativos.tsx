@@ -1,8 +1,7 @@
 import { AlertCircle, MessageSquare, Mail, Play } from "lucide-react";
-import { useMemo } from "react";
 import { toast } from "sonner";
 
-import { DashboardService } from "../../services/DashboardService";
+import { useDashboard } from "../../hooks/useDashboard";
 
 import owners from "@/data/clienteProprietario.json";
 import type { Filtros } from "@/data/tpv";
@@ -12,9 +11,8 @@ const ownersMap = owners as Record<string, string>;
 const MESES_LBL = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
 export function ClientesInativos({ filtros }: { filtros: Filtros }) {
-  const { rows, mesesSel, totalClientes } = useMemo(() => {
-    return DashboardService.getClientesInativos(filtros);
-  }, [filtros]);
+  const { inativos } = useDashboard();
+  const { rows, mesesSel, totalClientes } = inativos;
 
   const periodoTxt = mesesSel.map((m) => MESES_LBL[m - 1]).join(", ");
   const totalmenteInativos = rows.filter((r) => r.faltas === mesesSel.length).length;

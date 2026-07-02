@@ -1,7 +1,7 @@
 import { Target, TrendingUp, AlertCircle, Calendar } from "lucide-react";
 import { useState, useMemo } from "react";
 
-import { DashboardService } from "../../services/DashboardService";
+import { useDashboard } from "../../hooks/useDashboard";
 
 import { formatBRL } from "@/data/tpv";
 import type { Filtros } from "@/data/tpv";
@@ -9,9 +9,7 @@ import type { Filtros } from "@/data/tpv";
 export function AtingimentoMeta({ filtros }: { filtros: Filtros }) {
   const [activeTab, setActiveTab] = useState<"diario" | "semanal" | "mensal" | "anual">("mensal");
 
-  const metaData = useMemo(() => {
-    return DashboardService.getAtingimentoMeta(filtros);
-  }, [filtros]);
+  const { atingimento: metaData } = useDashboard();
 
   const { pct, meta, realizado, faltam, semaforo, projections } = metaData;
 

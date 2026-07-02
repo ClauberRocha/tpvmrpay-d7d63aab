@@ -2,10 +2,10 @@
 import { AnaliseInsights } from "./components/insights/AnaliseInsights";
 import { ClientesInativos } from "./components/insights/ClientesInativos";
 import { TopClientes } from "./components/insights/TopClientes";
-import { useDashboardFilter } from "./DashboardFilterContext";
+import { useDashboard } from "./hooks/useDashboard";
 
 export function DashboardInsights() {
-  const { filtros } = useDashboardFilter();
+  const { filtros } = useDashboard();
   return (
     <>
       {/* Linha 4: Top Clientes full width */}

@@ -1,16 +1,10 @@
 import { Receipt, Ticket, Users, Wallet } from "lucide-react";
-import { useMemo } from "react";
 
 import { KpiCard } from "./components/cards/KpiCard";
-import { useDashboardFilter } from "./DashboardFilterContext";
-import { DashboardService } from "./services/DashboardService";
+import { useDashboard } from "./hooks/useDashboard";
 
 export function DashboardKPIs() {
-  const { filtros } = useDashboardFilter();
-
-  const kpis = useMemo(() => {
-    return DashboardService.getKPIs(filtros);
-  }, [filtros]);
+  const { kpis } = useDashboard();
 
   return (
     <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">

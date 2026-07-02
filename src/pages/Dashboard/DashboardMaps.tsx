@@ -1,10 +1,10 @@
 import { RankBars } from "./components/charts/RankBars";
 import { MapaUF } from "./components/maps/MapaUF";
-import { useDashboardFilter } from "./DashboardFilterContext";
+import { useDashboard } from "./hooks/useDashboard";
 
 
 export function DashboardMaps() {
-  const { filtros } = useDashboardFilter();
+  const { filtros } = useDashboard();
   return (
     <section className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr,1fr]">
       <MapaUF filtros={filtros} />
