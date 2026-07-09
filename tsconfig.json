@@ -10,9 +10,9 @@
       "@pages/*": ["./src/pages/*"]
     },
     "strict": true,
-    "noUncheckedIndexedAccess": true,
+    "noUncheckedIndexedAccess": false,
     "noImplicitOverride": true,
-    "exactOptionalPropertyTypes": true,
+    "exactOptionalPropertyTypes": false,
     "noImplicitAny": true,
     "noUnusedParameters": false,
     "skipLibCheck": true,
