@@ -74,7 +74,7 @@ export function ShareSegmento({ filtros }: { filtros: Filtros }) {
                 }}
                 labelStyle={{ color: "#ffffff" }}
                 itemStyle={{ color: "#ffffff" }}
-                formatter={tooltipFormatter}
+                formatter={tooltipFormatter as any}
               />
             </PieChart>
           </ResponsiveContainer>
