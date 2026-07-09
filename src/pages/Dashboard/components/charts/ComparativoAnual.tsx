@@ -103,7 +103,7 @@ export function ComparativoAnual() {
               }}
               labelStyle={{ color: "#ffffff" }}
               itemStyle={{ color: "#ffffff" }}
-              formatter={tooltipFormatter1}
+              formatter={tooltipFormatter1 as any}
             />
             <Legend wrapperStyle={{ color: "#ffffff", fontSize: 12, paddingTop: 8 }} />
             <Bar dataKey="2025" fill={COR_2025} radius={[6, 6, 0, 0]} maxBarSize={56}>
