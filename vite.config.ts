@@ -19,12 +19,12 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     // Gzip compression (enabled in production builds)
     mode === "production" && compression({
-      algorithm: "gzip",
+      algorithms: ["gzip"],
       threshold: 1024,
     }),
     // Brotli compression (enabled in production builds)
     mode === "production" && compression({
-      algorithm: "brotliCompress",
+      algorithms: ["brotliCompress"],
       threshold: 1024,
     }),
   ].filter(Boolean),

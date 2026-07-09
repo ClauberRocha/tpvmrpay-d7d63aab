@@ -103,16 +103,16 @@ export function ComparativoAnual() {
               }}
               labelStyle={{ color: "#ffffff" }}
               itemStyle={{ color: "#ffffff" }}
-              formatter={tooltipFormatter1}
+              formatter={tooltipFormatter1 as any}
             />
             <Legend wrapperStyle={{ color: "#ffffff", fontSize: 12, paddingTop: 8 }} />
             <Bar dataKey="2025" fill={COR_2025} radius={[6, 6, 0, 0]} maxBarSize={56}>
               <LabelList dataKey="2025" position="top" fill="#ffffff" fontSize={10}
-                formatter={formatBRLCompact} />
+                formatter={formatBRLCompact as any} />
             </Bar>
             <Bar dataKey="2026" fill={COR_2026} radius={[6, 6, 0, 0]} maxBarSize={56}>
               <LabelList dataKey="2026" position="top" fill="#ffffff" fontSize={10}
-                formatter={formatBRLCompact} />
+                formatter={formatBRLCompact as any} />
             </Bar>
           </BarChart>
         </ResponsiveContainer>
@@ -142,7 +142,7 @@ export function ComparativoAnual() {
                 }}
                 labelStyle={{ color: "#ffffff" }}
                 itemStyle={{ color: "#ffffff" }}
-                formatter={tooltipFormatter2}
+                formatter={tooltipFormatter2 as any}
               />
               <ReferenceLine y={0} stroke="#ffffff" strokeWidth={2} />
               <Bar dataKey="variacao" radius={[6, 6, 6, 6]} maxBarSize={56}>
@@ -150,7 +150,7 @@ export function ComparativoAnual() {
                   <Cell key={i} fill={d.variacao >= 0 ? "hsl(var(--success))" : "#F42722"} />
                 ))}
                 <LabelList dataKey="variacao" position="top" fill="#ffffff" fontSize={11}
-                  formatter={labelListPercentFormatter} />
+                  formatter={labelListPercentFormatter as any} />
               </Bar>
             </BarChart>
           </ResponsiveContainer>

@@ -153,7 +153,7 @@ export function RankBars({ filtros, source, title, subtitle, color = "hsl(var(--
                 tickLine={false} axisLine={false} tick={{ fill: "#ffffff" }} tickFormatter={formatBRLCompact} />
               <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={11}
                 tickLine={false} axisLine={false} width={130}
-                tick={yAxisTickRenderer} />
+                tick={yAxisTickRenderer as any} />
               <Tooltip
                 cursor={{ fill: "hsl(var(--muted) / 0.4)" }}
                 contentStyle={{
@@ -165,7 +165,7 @@ export function RankBars({ filtros, source, title, subtitle, color = "hsl(var(--
                 }}
                 labelStyle={{ color: "#ffffff" }}
                 itemStyle={{ color: "#ffffff" }}
-                formatter={tooltipFormatter}
+                formatter={tooltipFormatter as any}
               />
               <Bar dataKey="value" radius={[0, 6, 6, 0]} isAnimationActive={true} animationDuration={600}>
                 {paginatedSeries.map((entry, i) => (
@@ -174,7 +174,7 @@ export function RankBars({ filtros, source, title, subtitle, color = "hsl(var(--
                 <LabelList
                   dataKey="value"
                   position="right"
-                  formatter={formatBRLCompact}
+                  formatter={formatBRLCompact as any}
                   style={{ fill: "#ffffff", fontSize: 10, fontWeight: 600 }}
                 />
               </Bar>
