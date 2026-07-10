@@ -74,9 +74,27 @@ export function DashboardFilterProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Sincroniza meses ⇄ ano:
+  // 1) Ao trocar o ano, descarta meses que não existem naquele ano (mantém interseção).
+  // 2) Se todos os meses disponíveis estiverem selecionados, colapsa para [] (= "Todos").
+  useEffect(() => {
+    const disponiveis = mesesDisponiveisPara(ano);
+    const setDisp = new Set(disponiveis);
+    const interseccao = meses.filter((m) => setDisp.has(m));
+    const colapsar = interseccao.length > 0 && interseccao.length === disponiveis.length;
+    const proximo = colapsar ? [] : interseccao;
+    if (
+      proximo.length !== meses.length ||
+      proximo.some((m, i) => m !== meses[i])
+    ) {
+      setMeses(proximo);
+    }
+  }, [ano, meses]);
+
   useEffect(() => {
     localStorage.setItem("tpv-filtros", JSON.stringify(filtros));
   }, [filtros]);
+
 
   return (
     <DashboardFilterContext.Provider value={{
