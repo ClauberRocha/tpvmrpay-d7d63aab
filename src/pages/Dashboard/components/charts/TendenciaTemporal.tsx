@@ -79,6 +79,7 @@ export function TendenciaTemporal({ filtros }: { filtros: Filtros }) {
               stroke="hsl(var(--primary))"
               strokeWidth={2.5}
               fill="url(#areaPrimary)"
+              isAnimationActive={false}
             />
           </AreaChart>
         </ResponsiveContainer>
