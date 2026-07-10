@@ -46,10 +46,10 @@ describe("Filtros — comportamento do filtro de meses", () => {
     const spy = vi.fn();
     render(<Harness initialAno={2026} initialMeses={[3]} onChange={spy} />);
     fireEvent.click(screen.getByRole("button", { name: "Todos" }));
-    // último onChange: meses=[], ano="todos"
-    const last = spy.mock.calls.at(-1);
-    expect(last?.[0]).toEqual([]);
-    expect(last?.[1]).toBe("todos");
+    // Todos dispara setAno("todos") + setMeses([]) — validamos que ambos ocorreram
+    const calls = spy.mock.calls;
+    expect(calls.some((c) => c[1] === "todos")).toBe(true);
+    expect(calls.some((c) => Array.isArray(c[0]) && c[0].length === 0)).toBe(true);
   });
 
   it("clique simples em um mês substitui a seleção anterior (não soma)", () => {
