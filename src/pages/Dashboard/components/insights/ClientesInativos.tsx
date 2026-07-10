@@ -99,13 +99,24 @@ export function ClientesInativos({ filtros }: { filtros: Filtros }) {
                   {r.faltas}/{mesesSel.length}
                 </td>
                 <td className="px-4 py-2.5 text-right align-middle whitespace-nowrap">
-                  <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs num-display font-semibold text-white ${
-                    r.churnScore >= 80 ? "bg-destructive/15 border-destructive/20" :
-                    r.churnScore >= 40 ? "bg-chart-orange/15 border-chart-orange/20" :
-                    "bg-success/15 border-success/20"
-                  }`}>
-                    {r.churnScore}% Risco
-                  </span>
+                  {(() => {
+                    const nivel =
+                      r.churnScore >= 80
+                        ? { label: "Crítico", cls: "bg-destructive/15 border-destructive/20", desc: "Risco crítico (≥ 80%): cliente com forte probabilidade de abandono. Priorizar contato imediato e oferta de retenção." }
+                        : r.churnScore >= 40
+                          ? { label: "Moderado", cls: "bg-chart-orange/15 border-chart-orange/20", desc: "Risco moderado (40–79%): sinais de desengajamento. Acionar campanha de reativação e monitorar próxima janela." }
+                          : { label: "Baixo", cls: "bg-success/15 border-success/20", desc: "Risco baixo (< 40%): cliente estável. Manter relacionamento e acompanhar recorrência." };
+                    const tooltip = `${nivel.label} — ${r.churnScore}% de probabilidade de churn. ${nivel.desc}`;
+                    return (
+                      <span
+                        className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs num-display font-semibold text-white cursor-help ${nivel.cls}`}
+                        title={tooltip}
+                        aria-label={tooltip}
+                      >
+                        {r.churnScore}% Risco
+                      </span>
+                    );
+                  })()}
                 </td>
                 <td className="px-4 py-2.5 text-center align-middle whitespace-nowrap">
                   <div className="flex items-center justify-center gap-1.5">
