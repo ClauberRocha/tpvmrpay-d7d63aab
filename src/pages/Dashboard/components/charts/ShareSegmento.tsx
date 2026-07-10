@@ -55,7 +55,7 @@ export function ShareSegmento({ filtros }: { filtros: Filtros }) {
         </div>
       </div>
 
-      <div style={{ height: Math.max(280, chartHeight) }} className="w-full">
+      <div style={{ height: 260 }} className="w-full">
         {series.length === 0 ? (
           <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
             Sem dados no período selecionado.
