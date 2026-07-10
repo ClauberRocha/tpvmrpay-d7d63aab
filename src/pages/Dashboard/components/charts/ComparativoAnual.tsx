@@ -218,6 +218,8 @@ export function ComparativoAnual() {
                             : "● Estável vs. 2025 (0,0%)"}
                       </div>
                     )}
+                  </div>
+                );
               }}
             />
             <Legend wrapperStyle={{ color: "#ffffff", fontSize: 12, paddingTop: 8 }} />
