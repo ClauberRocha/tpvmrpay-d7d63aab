@@ -55,7 +55,7 @@ export function ShareSegmento({ filtros }: { filtros: Filtros }) {
         </div>
       </div>
 
-      <div style={{ height: Math.max(280, chartHeight) }} className="w-full">
+      <div style={{ height: 260 }} className="w-full">
         {series.length === 0 ? (
           <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
             Sem dados no período selecionado.
@@ -102,7 +102,7 @@ export function ShareSegmento({ filtros }: { filtros: Filtros }) {
                 itemStyle={{ color: "#ffffff" }}
                 formatter={tooltipFormatter as any}
               />
-              <Bar dataKey="value" radius={[6, 6, 0, 0]} isAnimationActive animationDuration={600}>
+              <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={36} isAnimationActive animationDuration={600}>
                 {series.map((_, i) => (
                   <Cell key={i} fill={palette[i % palette.length]} />
                 ))}
