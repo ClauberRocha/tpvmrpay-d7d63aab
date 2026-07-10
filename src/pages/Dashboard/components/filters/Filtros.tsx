@@ -1,4 +1,4 @@
-import { GitCompareArrows, Info, X } from "lucide-react";
+import { AlertTriangle, GitCompareArrows, Info, X } from "lucide-react";
 
 import { tpv, type Periodo } from "@/data/tpv";
 import { cn } from "@/lib/utils";
@@ -14,9 +14,15 @@ interface FiltrosProps {
   setSegmento: (s: string) => void;
   uf: string;
   setUf: (u: string) => void;
+  /** Meses removidos automaticamente por incompatibilidade com o ano atual. */
+  mesesDescartados?: number[];
+  onDismissAviso?: () => void;
 }
 
-export function Filtros({ ano, setAno, meses, setMeses, segmento, setSegmento, uf, setUf }: FiltrosProps) {
+export function Filtros({
+  ano, setAno, meses, setMeses, segmento, setSegmento, uf, setUf,
+  mesesDescartados = [], onDismissAviso,
+}: FiltrosProps) {
   const anos: Periodo[] = ["todos", ...tpv.meta.anos];
 
   // Meses disponíveis (união se "todos os anos")
