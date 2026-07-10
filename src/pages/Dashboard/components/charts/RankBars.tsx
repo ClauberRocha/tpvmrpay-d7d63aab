@@ -64,7 +64,11 @@ export function RankBars({ filtros, source, title, subtitle, color = "hsl(var(--
     exportToCsv(csvData, `ranking_${source}.csv`, ["Posicao", "Nome", "TPV_Reais"]);
   };
 
-  const tooltipFormatter = useCallback((v: number) => [formatBRL(v), "TPV"], []);
+  const totalForTooltip = useMemo(() => limitedSeries.reduce((s, x) => s + x.value, 0), [limitedSeries]);
+  const tooltipFormatter = useCallback((v: number) => {
+    const pct = totalForTooltip > 0 ? (v / totalForTooltip) * 100 : 0;
+    return [`${formatBRL(v)} (${pct.toFixed(1)}% do total)`, "TPV"];
+  }, [totalForTooltip]);
 
   const yAxisTickRenderer = useCallback((props: { x: number; y: number; payload: { value: string } }) => {
     const { x, y, payload } = props;

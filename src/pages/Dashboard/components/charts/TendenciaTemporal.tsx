@@ -14,10 +14,16 @@ export function TendenciaTemporal({ filtros }: { filtros: Filtros }) {
     }));
   }, [filtros]);
 
-  const tooltipFormatter = useCallback((v: number) => [formatBRL(v), "TPV"], []);
-
   const total = series.reduce((s, p) => s + p.tpv, 0);
   const media = series.length ? total / series.length : 0;
+
+  const tooltipFormatter = useCallback(
+    (v: number) => {
+      const pct = total > 0 ? (v / total) * 100 : 0;
+      return [`${formatBRL(v)} (${pct.toFixed(1)}% do total)`, "TPV"];
+    },
+    [total]
+  );
 
   const semFiltroSegUf = filtros.segmento === "todos" && filtros.uf === "todos";
   const subtitulo = semFiltroSegUf
