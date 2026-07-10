@@ -111,7 +111,7 @@ export function ComparativoAnual() {
         </div>
       </div>
 
-      {/* Gráfico: Colunas agrupadas TPV 2025 vs 2026 + linha Variação % YoY */}
+      {/* Gráfico: Colunas agrupadas TPV 2025 vs 2026 + linha Variação % Ano a Ano */}
       <div className="h-[360px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={data} margin={{ top: 24, right: 12, left: -8, bottom: 0 }} barCategoryGap="25%" barGap={2}>
@@ -162,7 +162,7 @@ export function ComparativoAnual() {
                       <span>{formatBRL(v2026)}</span>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginTop: 4, paddingTop: 4, borderTop: "1px solid hsl(var(--border))" }}>
-                      <span style={{ color: varColor }}>Variação % YoY</span>
+                      <span style={{ color: varColor }}>Variação % Ano a Ano</span>
                       <span style={{ color: varColor, fontWeight: 700 }}>{varText}</span>
                     </div>
                   </div>
@@ -178,7 +178,7 @@ export function ComparativoAnual() {
               <LabelList dataKey="2026" position="top" fill="#ffffff" fontSize={10}
                 formatter={formatBRLCompact as any} />
             </Bar>
-            <Line yAxisId="right" type="monotone" dataKey="variacao" name="Variação % YoY (2026 vs. 2025)"
+            <Line yAxisId="right" type="monotone" dataKey="variacao" name="Variação % Ano a Ano (2026 vs. 2025)"
               stroke="#ffffff" strokeWidth={2} strokeDasharray="4 4"
               connectNulls={false}
               dot={renderVarDot}
