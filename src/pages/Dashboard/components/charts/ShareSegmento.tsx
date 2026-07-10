@@ -102,7 +102,7 @@ export function ShareSegmento({ filtros }: { filtros: Filtros }) {
                 itemStyle={{ color: "#ffffff" }}
                 formatter={tooltipFormatter as any}
               />
-              <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={36} isAnimationActive animationDuration={600}>
+              <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={20} isAnimationActive animationDuration={600}>
                 {series.map((_, i) => (
                   <Cell key={i} fill={palette[i % palette.length]} />
                 ))}
