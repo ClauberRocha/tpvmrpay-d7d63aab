@@ -99,10 +99,10 @@ export function ClientesInativos({ filtros }: { filtros: Filtros }) {
                   {r.faltas}/{mesesSel.length}
                 </td>
                 <td className="px-4 py-2.5 text-center align-middle whitespace-nowrap">
-                  <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold ${
-                    r.churnScore >= 80 ? "bg-destructive/15 text-destructive border-destructive/20" :
-                    r.churnScore >= 40 ? "bg-chart-orange/15 text-chart-orange border-chart-orange/20" :
-                    "bg-success/15 text-success border-success/20"
+                  <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold text-white ${
+                    r.churnScore >= 80 ? "bg-destructive/15 border-destructive/20" :
+                    r.churnScore >= 40 ? "bg-chart-orange/15 border-chart-orange/20" :
+                    "bg-success/15 border-success/20"
                   }`}>
                     {r.churnScore}% Risco
                   </span>
