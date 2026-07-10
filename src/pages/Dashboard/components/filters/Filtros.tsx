@@ -29,9 +29,16 @@ export function Filtros({ ano, setAno, meses, setMeses, segmento, setSegmento, u
 
   const todosMesesSelecionados = meses.length === 0 || meses.length === mesesDisponiveis.length;
 
-  const toggleMes = (m: number) => {
-    if (meses.includes(m)) setMeses(meses.filter((x) => x !== m));
-    else setMeses([...meses, m].sort((a, b) => a - b));
+  const toggleMes = (m: number, additive: boolean) => {
+    if (additive) {
+      // Ctrl/Shift/Cmd-clique = seleção múltipla acumulativa
+      if (meses.includes(m)) setMeses(meses.filter((x) => x !== m));
+      else setMeses([...meses, m].sort((a, b) => a - b));
+      return;
+    }
+    // Clique simples = seleção única (substitui)
+    if (meses.length === 1 && meses[0] === m) setMeses([]); // reclicar = "Todos"
+    else setMeses([m]);
   };
 
   return (
@@ -69,13 +76,17 @@ export function Filtros({ ano, setAno, meses, setMeses, segmento, setSegmento, u
           Meses
         </span>
         <button
-          onClick={() => setMeses([])}
+          onClick={() => {
+            setAno("todos");
+            setMeses([]);
+          }}
           className={cn(
             "rounded-md px-2.5 py-1 text-xs font-semibold transition-colors",
-            todosMesesSelecionados
+            ano === "todos" && todosMesesSelecionados
               ? "bg-primary/15 text-primary"
               : "text-muted-foreground hover:bg-muted hover:text-foreground"
           )}
+          title="Mostrar todos os meses de todos os anos"
         >
           Todos
         </button>
@@ -85,13 +96,14 @@ export function Filtros({ ano, setAno, meses, setMeses, segmento, setSegmento, u
           return (
             <button
               key={m}
-              onClick={() => toggleMes(m)}
+              onClick={(e) => toggleMes(m, e.shiftKey || e.ctrlKey || e.metaKey)}
               className={cn(
                 "rounded-md px-2.5 py-1 text-xs font-semibold transition-colors min-w-[40px]",
                 ativo
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
+              title="Clique para selecionar apenas este mês · Shift/Ctrl+clique para somar com outro mês"
             >
               {MESES_LBL[m - 1]}
             </button>
