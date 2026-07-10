@@ -118,6 +118,31 @@ export function Filtros({
           );
         })}
 
+        {/* Badge de normalização: meses foram descartados pela troca de ano */}
+        {mesesDescartados.length > 0 && (
+          <span
+            role="status"
+            aria-live="polite"
+            className="ml-2 inline-flex items-center gap-1.5 rounded-md border border-chart-orange/50 bg-chart-orange/15 px-2 py-1 text-[10px] font-semibold text-chart-orange"
+            title={`Os meses ${mesesDescartados
+              .map((m) => MESES_LBL[m - 1])
+              .join(", ")} foram removidos porque não existem em ${
+              ano === "todos" ? "todos os anos" : ano
+            }.`}
+          >
+            <AlertTriangle className="h-3 w-3" />
+            {mesesDescartados.length} {mesesDescartados.length === 1 ? "mês removido" : "meses removidos"} ({mesesDescartados.map((m) => MESES_LBL[m - 1]).join(", ")})
+            <button
+              type="button"
+              onClick={onDismissAviso}
+              className="rounded p-0.5 hover:bg-chart-orange/25"
+              aria-label="Dispensar aviso"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </span>
+        )}
+
         {/* Dica de atalho quando nada está em modo comparação */}
         {meses.length <= 1 && (
           <span className="ml-auto flex items-center gap-1 pr-2 text-[10px] text-muted-foreground">
