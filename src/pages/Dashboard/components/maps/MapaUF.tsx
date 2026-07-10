@@ -79,7 +79,9 @@ export function MapaUF({ filtros }: { filtros: Filtros }) {
                     <span className="text-muted-foreground">{formatBRLCompact(c.abs)}</span>
                     <span
                       className={`flex items-center gap-0.5 rounded-md px-1.5 py-0.5 font-semibold ${
-                        c.pct >= 0 ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"
+                        c.pct >= 0
+                          ? "bg-success/15 text-success"
+                          : "bg-destructive text-white shadow-sm shadow-destructive/40"
                       }`}
                     >
                       {c.pct >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}

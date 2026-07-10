@@ -136,10 +136,14 @@ export function TopClientes({ filtros }: { filtros: Filtros }) {
                 <td className="px-4 py-3 text-right num-display text-[#F9C730] font-semibold whitespace-nowrap align-middle">
                   {formatBRL(c.ltv)}
                 </td>
-                <td className={`px-4 py-3 text-center num-display font-semibold whitespace-nowrap align-middle ${
-                  c.growth >= 0 ? "text-success" : "text-destructive"
-                }`}>
-                  {c.growth >= 0 ? "+" : ""}{c.growth.toFixed(1)}%
+                <td className="px-4 py-3 text-center num-display whitespace-nowrap align-middle">
+                  <span className={`inline-flex items-center rounded-md px-2 py-0.5 font-semibold ${
+                    c.growth >= 0
+                      ? "text-success"
+                      : "bg-destructive text-white shadow-sm shadow-destructive/40"
+                  }`}>
+                    {c.growth >= 0 ? "+" : ""}{c.growth.toFixed(1)}%
+                  </span>
                 </td>
                 <td className="px-4 py-3 text-center num-display whitespace-nowrap align-middle">
                   {c.inadimplencia > 0 ? (

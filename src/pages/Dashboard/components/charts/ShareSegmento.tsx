@@ -97,8 +97,10 @@ export function ShareSegmento({ filtros }: { filtros: Filtros }) {
                 <div className="flex items-center gap-3 shrink-0">
                   <span className="text-muted-foreground num-display text-xs">{formatBRL(s.value)}</span>
                   {prevVal > 0 && (
-                    <span className={`text-[10px] font-semibold num-display ${
-                      growth >= 0 ? "text-success" : "text-destructive"
+                    <span className={`text-[10px] font-semibold num-display rounded-md px-1.5 py-0.5 ${
+                      growth >= 0
+                        ? "text-success"
+                        : "bg-destructive text-white shadow-sm shadow-destructive/40"
                     }`}>
                       {growth >= 0 ? "↑" : "↓"}{Math.abs(growth).toFixed(0)}%
                     </span>
