@@ -18,19 +18,6 @@ export function ClientesInativos({ filtros }: { filtros: Filtros }) {
   const totalmenteInativos = rows.filter((r) => r.faltas === mesesSel.length).length;
   const pctInativos = totalClientes > 0 ? (rows.length / totalClientes) * 100 : 0;
 
-  const triggerWhatsApp = (name: string) => {
-    toast.success(`Mensagem de WhatsApp copiada para enviar para ${name}!`, {
-      description: "Olá! Sentimos sua falta transacionando conosco este mês...",
-    });
-  };
-
-  const triggerEmail = (name: string) => {
-    toast.success(`E-mail comercial de reativação enfileirado para ${name}!`);
-  };
-
-  const triggerCampanha = (name: string) => {
-    toast.success(`Campanha de desconto/taxa reduzida criada para o cliente ${name}!`);
-  };
 
   return (
     <div className="panel">
