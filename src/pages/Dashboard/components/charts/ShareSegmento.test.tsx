@@ -1,3 +1,4 @@
+import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 
@@ -6,17 +7,13 @@ import { DashboardService } from "../../services/DashboardService";
 import type { Filtros } from "@/data/tpv";
 
 // Recharts uses ResponsiveContainer which relies on element size; jsdom returns 0.
-// Force a fixed size so SVG bars render.
+// Substitui por um clone do BarChart com width/height fixos para forçar renderização.
 vi.mock("recharts", async () => {
   const actual = await vi.importActual<typeof import("recharts")>("recharts");
   return {
     ...actual,
-    ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
-      <div style={{ width: 600, height: 400 }}>
-        {/* @ts-expect-error injected children */}
-        {typeof children === "function" ? children({ width: 600, height: 400 }) : children}
-      </div>
-    ),
+    ResponsiveContainer: ({ children }: { children: React.ReactElement }) =>
+      React.cloneElement(children, { width: 600, height: 400 }),
   };
 });
 
