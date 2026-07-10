@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { tpv, type Filtros as FiltrosType, type Periodo } from "@/data/tpv";
 
@@ -12,6 +12,10 @@ interface DashboardFilterContextType {
   uf: string;
   setUf: (uf: string) => void;
   filtros: FiltrosType;
+  /** Meses descartados na última normalização por incompatibilidade com o ano selecionado. */
+  mesesDescartados: number[];
+  /** Descarta o aviso de normalização (fecha o badge). */
+  dismissAvisoNormalizacao: () => void;
 }
 
 const DashboardFilterContext = createContext<DashboardFilterContextType | undefined>(undefined);
