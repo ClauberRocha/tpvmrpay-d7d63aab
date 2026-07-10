@@ -132,13 +132,11 @@ describe("ShareSegmento", () => {
 
     const { container } = render(<ShareSegmento filtros={filtros} />);
 
-    expect(screen.getByText(/Sem dados no período selecionado/i)).toBeInTheDocument();
-    // não deve renderizar nenhuma barra colorida
+    // Mensagem aparece tanto no placeholder do gráfico quanto na análise
+    expect(screen.getAllByText(/Sem dados no período selecionado/i).length).toBeGreaterThan(0);
+    // não deve renderizar barras
     const cells = container.querySelectorAll(".recharts-bar-rectangle path, .recharts-rectangle");
-    cells.forEach((el) => {
-      // se algo aparecer, não pode ser cor diferente da paleta
-      expect([BAR_COLOR, null]).toContain(el.getAttribute("fill"));
-    });
+    expect(cells.length).toBe(0);
   });
 
   it("análise agregada usa o líder e o top 3", () => {
