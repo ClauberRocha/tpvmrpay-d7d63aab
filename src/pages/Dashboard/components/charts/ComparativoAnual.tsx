@@ -1,8 +1,9 @@
 import { useMemo, useCallback } from "react";
 import {
-  Bar, CartesianGrid, ComposedChart, LabelList, Legend, Line,
+  Bar, CartesianGrid, ComposedChart, LabelList, Legend, Line, ReferenceDot,
   ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
+import { TrendingDown } from "lucide-react";
 
 import { formatBRL, formatBRLCompact, MESES, tpv } from "@/data/tpv";
 
@@ -103,6 +104,17 @@ export function ComparativoAnual() {
     (m, d) => (d.variacao != null && d.variacao < m.variacao ? { label: d.label, variacao: d.variacao } : m),
     { label: "-", variacao: Infinity } as { label: string; variacao: number }
   );
+
+  const quedas = data
+    .filter((d) => d.variacao != null && d.variacao < 0)
+    .map((d) => ({
+      label: d.label,
+      variacao: d.variacao as number,
+      diff: (d["2026"] as number) - (d["2025"] as number),
+    }))
+    .sort((a, b) => a.variacao - b.variacao);
+
+  const piorMes = quedas[0];
 
   const periodo = data.length
     ? `${data[0].label} a ${data[data.length - 1].label}/2026`
