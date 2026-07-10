@@ -1,5 +1,5 @@
-import { AlertCircle, MessageSquare, Mail, Play } from "lucide-react";
-import { toast } from "sonner";
+import { AlertCircle } from "lucide-react";
+
 
 import { useDashboard } from "../../hooks/useDashboard";
 
@@ -18,19 +18,6 @@ export function ClientesInativos({ filtros }: { filtros: Filtros }) {
   const totalmenteInativos = rows.filter((r) => r.faltas === mesesSel.length).length;
   const pctInativos = totalClientes > 0 ? (rows.length / totalClientes) * 100 : 0;
 
-  const triggerWhatsApp = (name: string) => {
-    toast.success(`Mensagem de WhatsApp copiada para enviar para ${name}!`, {
-      description: "Olá! Sentimos sua falta transacionando conosco este mês...",
-    });
-  };
-
-  const triggerEmail = (name: string) => {
-    toast.success(`E-mail comercial de reativação enfileirado para ${name}!`);
-  };
-
-  const triggerCampanha = (name: string) => {
-    toast.success(`Campanha de desconto/taxa reduzida criada para o cliente ${name}!`);
-  };
 
   return (
     <div className="panel">
@@ -41,7 +28,7 @@ export function ClientesInativos({ filtros }: { filtros: Filtros }) {
             Matriz de Ociosidade & Risco de Churn (Inatividade)
           </h3>
           <p className="text-xs text-muted-foreground">
-            Clientes inativos (R$ 0,00) por período, probabilidade de abandono e ações de reativação · {periodoTxt}
+            Clientes inativos (R$ 0,00) por período e probabilidade de abandono · {periodoTxt}
           </p>
         </div>
         <div className="text-right text-xs text-muted-foreground">
@@ -63,13 +50,13 @@ export function ClientesInativos({ filtros }: { filtros: Filtros }) {
               ))}
               <th className="px-4 py-3 text-right font-medium w-16">Faltas</th>
               <th className="px-4 py-3 text-right font-medium w-28">Risco Churn</th>
-              <th className="px-4 py-3 text-center font-medium w-36">Ações Rápidas</th>
+              
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 && (
               <tr>
-                <td colSpan={mesesSel.length + 5} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={mesesSel.length + 4} className="px-4 py-8 text-center text-muted-foreground">
                   Todos os clientes transacionaram em todos os meses selecionados.
                 </td>
               </tr>
@@ -117,31 +104,6 @@ export function ClientesInativos({ filtros }: { filtros: Filtros }) {
                       </span>
                     );
                   })()}
-                </td>
-                <td className="px-4 py-2.5 text-center align-middle whitespace-nowrap">
-                  <div className="flex items-center justify-center gap-1.5">
-                    <button
-                      onClick={() => triggerWhatsApp(r.name)}
-                      className="rounded-lg p-1.5 border border-border bg-background/50 hover:bg-success/10 hover:text-success text-muted-foreground transition-colors"
-                      title="Chamar no WhatsApp"
-                    >
-                      <MessageSquare className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      onClick={() => triggerEmail(r.name)}
-                      className="rounded-lg p-1.5 border border-border bg-background/50 hover:bg-primary/10 hover:text-primary text-muted-foreground transition-colors"
-                      title="Enviar E-mail"
-                    >
-                      <Mail className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      onClick={() => triggerCampanha(r.name)}
-                      className="rounded-lg p-1.5 border border-border bg-background/50 hover:bg-chart-violet/10 hover:text-chart-violet text-muted-foreground transition-colors"
-                      title="Criar Campanha Especial"
-                    >
-                      <Play className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
                 </td>
               </tr>
             ))}
