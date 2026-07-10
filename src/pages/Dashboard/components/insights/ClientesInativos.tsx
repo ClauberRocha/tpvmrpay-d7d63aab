@@ -105,31 +105,6 @@ export function ClientesInativos({ filtros }: { filtros: Filtros }) {
                     );
                   })()}
                 </td>
-                <td className="px-4 py-2.5 text-center align-middle whitespace-nowrap">
-                  <div className="flex items-center justify-center gap-1.5">
-                    <button
-                      onClick={() => triggerWhatsApp(r.name)}
-                      className="rounded-lg p-1.5 border border-border bg-background/50 hover:bg-success/10 hover:text-success text-muted-foreground transition-colors"
-                      title="Chamar no WhatsApp"
-                    >
-                      <MessageSquare className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      onClick={() => triggerEmail(r.name)}
-                      className="rounded-lg p-1.5 border border-border bg-background/50 hover:bg-primary/10 hover:text-primary text-muted-foreground transition-colors"
-                      title="Enviar E-mail"
-                    >
-                      <Mail className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      onClick={() => triggerCampanha(r.name)}
-                      className="rounded-lg p-1.5 border border-border bg-background/50 hover:bg-chart-violet/10 hover:text-chart-violet text-muted-foreground transition-colors"
-                      title="Criar Campanha Especial"
-                    >
-                      <Play className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                </td>
               </tr>
             ))}
           </tbody>
