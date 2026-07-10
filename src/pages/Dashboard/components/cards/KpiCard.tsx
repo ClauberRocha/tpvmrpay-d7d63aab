@@ -99,7 +99,9 @@ export function KpiCard({
               <div
                 className={cn(
                   "flex items-center gap-1 rounded-md px-2 py-1 font-semibold",
-                  positivo ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive",
+                  positivo
+                    ? "bg-success/15 text-success"
+                    : "bg-destructive text-white shadow-sm shadow-destructive/40",
                 )}
               >
                 {positivo ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
