@@ -133,9 +133,6 @@ export function TopClientes({ filtros }: { filtros: Filtros }) {
                 <td className="px-4 py-3 text-right num-display text-muted-foreground whitespace-nowrap align-middle">
                   {formatBRL(c.ticket)}
                 </td>
-                <td className="px-4 py-3 text-right num-display text-[#F9C730] font-semibold whitespace-nowrap align-middle">
-                  {formatBRL(c.ltv)}
-                </td>
                 <td className="px-4 py-3 text-center num-display whitespace-nowrap align-middle">
                   <span className={`inline-flex items-center rounded-md px-2 py-0.5 font-semibold ${
                     c.growth >= 0
@@ -145,21 +142,7 @@ export function TopClientes({ filtros }: { filtros: Filtros }) {
                     {c.growth >= 0 ? "+" : ""}{c.growth.toFixed(1)}%
                   </span>
                 </td>
-                <td className="px-4 py-3 text-center num-display whitespace-nowrap align-middle">
-                  {c.inadimplencia > 0 ? (
-                    <span className="text-destructive font-semibold">{c.inadimplencia.toFixed(1)}%</span>
-                  ) : (
-                    <span className="text-muted-foreground">0.0%</span>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-center text-xs text-muted-foreground whitespace-nowrap align-middle">
-                  {c.ultimaCompra}
-                </td>
-                <td className="px-4 py-3 text-center align-middle whitespace-nowrap">
-                  <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${STATUS_STYLES[c.status]}`}>
-                    {c.status}
-                  </span>
-                </td>
+
               </tr>
             ))}
           </tbody>
