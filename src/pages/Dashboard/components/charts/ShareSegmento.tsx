@@ -27,7 +27,18 @@ export function ShareSegmento({ filtros }: { filtros: Filtros }) {
     return { series: arr, total, prevMap };
   }, [filtros]);
 
-  const tooltipFormatter = useCallback((v: number) => [formatBRL(v), "TPV"], []);
+  const tooltipFormatter = useCallback(
+    (v: number) => {
+      const pct = total > 0 ? (v / total) * 100 : 0;
+      return [`${formatBRL(v)} (${pct.toFixed(1)}% do total)`, "TPV"];
+    },
+    [total]
+  );
+
+  const truncateLabel = useCallback((value: string) => {
+    if (!value) return "";
+    return value.length > 12 ? `${value.slice(0, 11)}…` : value;
+  }, []);
 
   const chartHeight = Math.max(220, series.length * 38);
 
