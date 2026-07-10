@@ -27,7 +27,9 @@ export function ComparativoAnual() {
     return Array.from(acc.values())
       .sort((a, b) => a.mes - b.mes)
       .map((r) => {
-        const variacao = r.v2025 > 0 ? ((r.v2026 - r.v2025) / r.v2025) * 100 : 0;
+        // Sem dados suficientes em 2025 ou 2026: variação indefinida (não plotar)
+        const hasBoth = r.v2025 > 0 && r.v2026 > 0;
+        const variacao = hasBoth ? ((r.v2026 - r.v2025) / r.v2025) * 100 : null;
         return {
           label: MESES[r.mes - 1],
           "2025": r.v2025,
@@ -39,18 +41,44 @@ export function ComparativoAnual() {
 
   const yAxisPercentFormatter = useCallback((v: number) => `${v.toFixed(0)}%`, []);
 
-  const labelListPercentFormatter = useCallback((v: number) => `${v >= 0 ? "+" : ""}${v.toFixed(1)}%`, []);
+  const labelListPercentFormatter = useCallback(
+    (v: number | null | undefined) => (v == null ? "" : `${v >= 0 ? "+" : ""}${v.toFixed(1)}%`),
+    []
+  );
+
+  const COR_POS = "hsl(var(--success))";
+  const COR_NEG = "#F42722";
+
+  const renderVarDot = useCallback((props: any) => {
+    const { cx, cy, payload } = props;
+    if (cx == null || cy == null || payload?.variacao == null) return <g />;
+    const fill = payload.variacao < 0 ? COR_NEG : COR_POS;
+    return <circle cx={cx} cy={cy} r={4} fill={fill} stroke={fill} />;
+  }, []);
+
+  const renderVarLabel = useCallback((props: any) => {
+    const { x, y, value } = props;
+    if (value == null) return null;
+    const fill = value < 0 ? COR_NEG : COR_POS;
+    const text = `${value >= 0 ? "+" : ""}${Number(value).toFixed(1)}%`;
+    return (
+      <text x={x} y={y - 8} fill={fill} fontSize={10} textAnchor="middle" fontWeight={600}>
+        {text}
+      </text>
+    );
+  }, []);
+
 
   const total2025 = data.reduce((s, d) => s + d["2025"], 0);
   const total2026 = data.reduce((s, d) => s + d["2026"], 0);
   const variacaoTotal = total2025 > 0 ? ((total2026 - total2025) / total2025) * 100 : 0;
 
   const melhor = data.reduce(
-    (m, d) => (d.variacao > m.variacao ? d : m),
+    (m, d) => (d.variacao != null && d.variacao > m.variacao ? { label: d.label, variacao: d.variacao } : m),
     { label: "-", variacao: -Infinity } as { label: string; variacao: number }
   );
   const pior = data.reduce(
-    (m, d) => (d.variacao < m.variacao ? d : m),
+    (m, d) => (d.variacao != null && d.variacao < m.variacao ? { label: d.label, variacao: d.variacao } : m),
     { label: "-", variacao: Infinity } as { label: string; variacao: number }
   );
 
@@ -102,29 +130,64 @@ export function ComparativoAnual() {
                 fontSize: 12,
                 color: "#ffffff",
               }}
-              labelStyle={{ color: "#ffffff" }}
+              labelStyle={{ color: "#ffffff", fontWeight: 600, marginBottom: 4 }}
               itemStyle={{ color: "#ffffff" }}
-              formatter={((v: number, name: string) => {
-                if (name === "Variação % YoY") return [`${v >= 0 ? "+" : ""}${v.toFixed(1)}%`, name];
-                return [formatBRL(v), name];
-              }) as any}
+              content={({ active, payload, label }: any) => {
+                if (!active || !payload?.length) return null;
+                const row = payload[0]?.payload ?? {};
+                const v2025 = row["2025"] ?? 0;
+                const v2026 = row["2026"] ?? 0;
+                const variacao: number | null = row.variacao;
+                const varColor = variacao == null ? "#ffffff" : variacao < 0 ? COR_NEG : COR_POS;
+                const varText = variacao == null
+                  ? "—"
+                  : `${variacao >= 0 ? "+" : ""}${variacao.toFixed(1)}%`;
+                return (
+                  <div style={{
+                    background: "hsl(var(--popover))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: 12,
+                    padding: "8px 12px",
+                    fontSize: 12,
+                    color: "#ffffff",
+                    minWidth: 200,
+                  }}>
+                    <div style={{ fontWeight: 600, marginBottom: 6 }}>{label}</div>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                      <span style={{ color: COR_2025 }}>● TPV 2025</span>
+                      <span>{formatBRL(v2025)}</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                      <span style={{ color: COR_2026 }}>● TPV 2026</span>
+                      <span>{formatBRL(v2026)}</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginTop: 4, paddingTop: 4, borderTop: "1px solid hsl(var(--border))" }}>
+                      <span style={{ color: varColor }}>Variação % YoY</span>
+                      <span style={{ color: varColor, fontWeight: 700 }}>{varText}</span>
+                    </div>
+                  </div>
+                );
+              }}
             />
             <Legend wrapperStyle={{ color: "#ffffff", fontSize: 12, paddingTop: 8 }} />
-            <Bar yAxisId="left" dataKey="2025" fill={COR_2025} radius={[6, 6, 0, 0]} maxBarSize={56}>
+            <Bar yAxisId="left" dataKey="2025" name="TPV 2025 (R$)" fill={COR_2025} radius={[6, 6, 0, 0]} maxBarSize={56}>
               <LabelList dataKey="2025" position="top" fill="#ffffff" fontSize={10}
                 formatter={formatBRLCompact as any} />
             </Bar>
-            <Bar yAxisId="left" dataKey="2026" fill={COR_2026} radius={[6, 6, 0, 0]} maxBarSize={56}>
+            <Bar yAxisId="left" dataKey="2026" name="TPV 2026 (R$)" fill={COR_2026} radius={[6, 6, 0, 0]} maxBarSize={56}>
               <LabelList dataKey="2026" position="top" fill="#ffffff" fontSize={10}
                 formatter={formatBRLCompact as any} />
             </Bar>
-            <Line yAxisId="right" type="monotone" dataKey="variacao" name="Variação % YoY"
-              stroke="hsl(var(--success))" strokeWidth={2.5}
-              dot={{ r: 4, fill: "hsl(var(--success))" }}
-              activeDot={{ r: 6 }}>
-              <LabelList dataKey="variacao" position="top" fill="#ffffff" fontSize={10}
-                formatter={labelListPercentFormatter as any} />
+            <Line yAxisId="right" type="monotone" dataKey="variacao" name="Variação % YoY (2026 vs. 2025)"
+              stroke="#ffffff" strokeWidth={2} strokeDasharray="4 4"
+              connectNulls={false}
+              dot={renderVarDot}
+              activeDot={{ r: 6 }}
+              isAnimationActive={false}
+            >
+              <LabelList dataKey="variacao" content={renderVarLabel as any} />
             </Line>
+
           </ComposedChart>
         </ResponsiveContainer>
       </div>
