@@ -199,6 +199,25 @@ export function ComparativoAnual() {
                       <span style={{ color: varColor }}>Variação % Ano a Ano</span>
                       <span style={{ color: varColor, fontWeight: 700 }}>{varText}</span>
                     </div>
+                    {variacao != null && (
+                      <div style={{
+                        marginTop: 6,
+                        padding: "6px 8px",
+                        borderRadius: 8,
+                        background: variacao < 0 ? "rgba(244,39,34,0.15)" : "rgba(34,197,94,0.15)",
+                        border: `1px solid ${varColor}`,
+                        color: varColor,
+                        fontWeight: 600,
+                        fontSize: 11,
+                        textAlign: "center",
+                      }}>
+                        {variacao < 0
+                          ? `▼ Queda de ${Math.abs(variacao).toFixed(1)}% vs. 2025`
+                          : variacao > 0
+                            ? `▲ Crescimento de ${variacao.toFixed(1)}% vs. 2025`
+                            : "● Estável vs. 2025 (0,0%)"}
+                      </div>
+                    )}
                   </div>
                 );
               }}
