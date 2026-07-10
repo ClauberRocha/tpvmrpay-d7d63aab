@@ -52,9 +52,19 @@ const normalizarFiltros = (value: Partial<FiltrosType> | null | undefined): Filt
 
 export function DashboardFilterProvider({ children }: { children: ReactNode }) {
   const [ano, setAno] = useState<Periodo>(tpv.meta.anos[tpv.meta.anos.length - 1] ?? "todos");
-  const [meses, setMeses] = useState<number[]>([]);
+  const [meses, setMesesInternal] = useState<number[]>([]);
   const [segmento, setSegmento] = useState("todos");
   const [uf, setUf] = useState("todos");
+  const [mesesDescartados, setMesesDescartados] = useState<number[]>([]);
+  const prevAnoRef = useRef(ano);
+
+  // setMeses público: qualquer ação explícita do usuário limpa o aviso de normalização
+  const setMeses = useCallback((next: number[]) => {
+    setMesesInternal(next);
+    setMesesDescartados([]);
+  }, []);
+
+  const dismissAvisoNormalizacao = useCallback(() => setMesesDescartados([]), []);
 
   const filtros = useMemo<FiltrosType>(() => normalizarFiltros({
     ano,
@@ -69,9 +79,10 @@ export function DashboardFilterProvider({ children }: { children: ReactNode }) {
       try {
         const parsed = normalizarFiltros(JSON.parse(saved));
         setAno(parsed.ano);
-        setMeses(parsed.meses);
+        setMesesInternal(parsed.meses);
         setSegmento(parsed.segmento);
         setUf(parsed.uf);
+        prevAnoRef.current = parsed.ano;
       } catch {
         localStorage.removeItem("tpv-filtros");
       }
@@ -79,7 +90,7 @@ export function DashboardFilterProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Sincroniza meses ⇄ ano:
-  // 1) Ao trocar o ano, descarta meses que não existem naquele ano (mantém interseção).
+  // 1) Ao trocar o ano, descarta meses inexistentes e sinaliza quais foram removidos.
   // 2) Se todos os meses disponíveis estiverem selecionados, colapsa para [] (= "Todos").
   useEffect(() => {
     const disponiveis = mesesDisponiveisPara(ano);
@@ -87,13 +98,23 @@ export function DashboardFilterProvider({ children }: { children: ReactNode }) {
     const interseccao = meses.filter((m) => setDisp.has(m));
     const colapsar = interseccao.length > 0 && interseccao.length === disponiveis.length;
     const proximo = colapsar ? [] : interseccao;
-    if (
-      proximo.length !== meses.length ||
-      proximo.some((m, i) => m !== meses[i])
-    ) {
-      setMeses(proximo);
+    const mudou =
+      proximo.length !== meses.length || proximo.some((m, i) => m !== meses[i]);
+    if (mudou) setMesesInternal(proximo);
+
+    if (prevAnoRef.current !== ano) {
+      const descartados = meses.filter((m) => !setDisp.has(m));
+      if (descartados.length > 0) setMesesDescartados(descartados);
+      prevAnoRef.current = ano;
     }
   }, [ano, meses]);
+
+  // Auto-descartar aviso após 8s para não poluir a UI indefinidamente
+  useEffect(() => {
+    if (mesesDescartados.length === 0) return;
+    const t = setTimeout(() => setMesesDescartados([]), 8000);
+    return () => clearTimeout(t);
+  }, [mesesDescartados]);
 
   useEffect(() => {
     localStorage.setItem("tpv-filtros", JSON.stringify(filtros));
@@ -107,6 +128,8 @@ export function DashboardFilterProvider({ children }: { children: ReactNode }) {
       segmento, setSegmento,
       uf, setUf,
       filtros,
+      mesesDescartados,
+      dismissAvisoNormalizacao,
     }}>
       {children}
     </DashboardFilterContext.Provider>
