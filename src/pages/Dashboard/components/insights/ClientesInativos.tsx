@@ -50,7 +50,7 @@ export function ClientesInativos({ filtros }: { filtros: Filtros }) {
               ))}
               <th className="px-4 py-3 text-right font-medium w-16">Faltas</th>
               <th className="px-4 py-3 text-right font-medium w-28">Risco Churn</th>
-              <th className="px-4 py-3 text-center font-medium w-36">Ações Rápidas</th>
+              
             </tr>
           </thead>
           <tbody>
