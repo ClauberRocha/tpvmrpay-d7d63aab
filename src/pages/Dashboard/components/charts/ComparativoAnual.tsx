@@ -221,6 +221,26 @@ export function ComparativoAnual() {
             >
               <LabelList dataKey="variacao" content={renderVarLabel as any} />
             </Line>
+            {piorMes && (
+              <ReferenceDot
+                yAxisId="right"
+                x={piorMes.label}
+                y={piorMes.variacao}
+                r={9}
+                fill={COR_NEG}
+                stroke="#ffffff"
+                strokeWidth={2}
+                ifOverflow="extendDomain"
+                label={{
+                  value: "▼ Maior queda",
+                  position: "bottom",
+                  fill: COR_NEG,
+                  fontSize: 10,
+                  fontWeight: 700,
+                }}
+              />
+            )}
+
 
           </ComposedChart>
         </ResponsiveContainer>
