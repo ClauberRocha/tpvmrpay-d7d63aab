@@ -68,14 +68,17 @@ export function ShareSegmento({ filtros }: { filtros: Filtros }) {
                 type="category"
                 dataKey="name"
                 stroke="hsl(var(--muted-foreground))"
-                fontSize={11}
+                fontSize={10}
                 tickLine={false}
                 axisLine={false}
                 interval={0}
-                angle={-25}
+                angle={-40}
                 textAnchor="end"
-                height={60}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11, fontWeight: 600 }}
+                height={72}
+                tickMargin={8}
+                minTickGap={0}
+                tickFormatter={truncateLabel}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10, fontWeight: 600 }}
               />
               <YAxis
                 type="number"
