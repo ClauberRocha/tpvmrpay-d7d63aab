@@ -27,7 +27,9 @@ export function ComparativoAnual() {
     return Array.from(acc.values())
       .sort((a, b) => a.mes - b.mes)
       .map((r) => {
-        const variacao = r.v2025 > 0 ? ((r.v2026 - r.v2025) / r.v2025) * 100 : 0;
+        // Sem dados suficientes em 2025 ou 2026: variação indefinida (não plotar)
+        const hasBoth = r.v2025 > 0 && r.v2026 > 0;
+        const variacao = hasBoth ? ((r.v2026 - r.v2025) / r.v2025) * 100 : null;
         return {
           label: MESES[r.mes - 1],
           "2025": r.v2025,
@@ -39,18 +41,44 @@ export function ComparativoAnual() {
 
   const yAxisPercentFormatter = useCallback((v: number) => `${v.toFixed(0)}%`, []);
 
-  const labelListPercentFormatter = useCallback((v: number) => `${v >= 0 ? "+" : ""}${v.toFixed(1)}%`, []);
+  const labelListPercentFormatter = useCallback(
+    (v: number | null | undefined) => (v == null ? "" : `${v >= 0 ? "+" : ""}${v.toFixed(1)}%`),
+    []
+  );
+
+  const COR_POS = "hsl(var(--success))";
+  const COR_NEG = "#F42722";
+
+  const renderVarDot = useCallback((props: any) => {
+    const { cx, cy, payload } = props;
+    if (cx == null || cy == null || payload?.variacao == null) return <g />;
+    const fill = payload.variacao < 0 ? COR_NEG : COR_POS;
+    return <circle cx={cx} cy={cy} r={4} fill={fill} stroke={fill} />;
+  }, []);
+
+  const renderVarLabel = useCallback((props: any) => {
+    const { x, y, value } = props;
+    if (value == null) return null;
+    const fill = value < 0 ? COR_NEG : COR_POS;
+    const text = `${value >= 0 ? "+" : ""}${Number(value).toFixed(1)}%`;
+    return (
+      <text x={x} y={y - 8} fill={fill} fontSize={10} textAnchor="middle" fontWeight={600}>
+        {text}
+      </text>
+    );
+  }, []);
+
 
   const total2025 = data.reduce((s, d) => s + d["2025"], 0);
   const total2026 = data.reduce((s, d) => s + d["2026"], 0);
   const variacaoTotal = total2025 > 0 ? ((total2026 - total2025) / total2025) * 100 : 0;
 
   const melhor = data.reduce(
-    (m, d) => (d.variacao > m.variacao ? d : m),
+    (m, d) => (d.variacao != null && d.variacao > m.variacao ? { label: d.label, variacao: d.variacao } : m),
     { label: "-", variacao: -Infinity } as { label: string; variacao: number }
   );
   const pior = data.reduce(
-    (m, d) => (d.variacao < m.variacao ? d : m),
+    (m, d) => (d.variacao != null && d.variacao < m.variacao ? { label: d.label, variacao: d.variacao } : m),
     { label: "-", variacao: Infinity } as { label: string; variacao: number }
   );
 
