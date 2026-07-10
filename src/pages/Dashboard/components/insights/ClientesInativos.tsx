@@ -56,7 +56,7 @@ export function ClientesInativos({ filtros }: { filtros: Filtros }) {
           <tbody>
             {rows.length === 0 && (
               <tr>
-                <td colSpan={mesesSel.length + 5} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={mesesSel.length + 4} className="px-4 py-8 text-center text-muted-foreground">
                   Todos os clientes transacionaram em todos os meses selecionados.
                 </td>
               </tr>
