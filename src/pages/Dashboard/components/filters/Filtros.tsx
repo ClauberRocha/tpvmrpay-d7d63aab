@@ -1,3 +1,5 @@
+import { GitCompareArrows, Info, X } from "lucide-react";
+
 import { tpv, type Periodo } from "@/data/tpv";
 import { cn } from "@/lib/utils";
 
@@ -100,24 +102,82 @@ export function Filtros({ ano, setAno, meses, setMeses, segmento, setSegmento, u
               className={cn(
                 "rounded-md px-2.5 py-1 text-xs font-semibold transition-colors min-w-[40px]",
                 ativo
-                  ? "bg-primary text-primary-foreground"
+                  ? "bg-primary text-primary-foreground ring-2 ring-primary/40 ring-offset-1 ring-offset-background"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
-              title="Clique para selecionar apenas este mês · Shift/Ctrl+clique para somar com outro mês"
+              title="Clique = apenas este mês · Shift/Ctrl/Cmd+clique = adicionar ao comparativo"
             >
               {MESES_LBL[m - 1]}
             </button>
           );
         })}
-        {meses.length > 0 && meses.length !== mesesDisponiveis.length && (
-          <span className="ml-auto pr-2 text-[10px] text-muted-foreground">
-            {meses.length} {meses.length === 1 ? "mês" : "meses"} selecionado{meses.length > 1 ? "s" : ""}
+
+        {/* Dica de atalho quando nada está em modo comparação */}
+        {meses.length <= 1 && (
+          <span className="ml-auto flex items-center gap-1 pr-2 text-[10px] text-muted-foreground">
+            <Info className="h-3 w-3" />
+            Shift/Ctrl+clique p/ comparar
           </span>
         )}
       </div>
+
+      {/* Painel de status da seleção */}
+      {meses.length > 0 && (
+        <div
+          className={cn(
+            "flex flex-wrap items-center gap-2 rounded-xl border p-2 text-xs",
+            meses.length >= 2
+              ? "border-primary/50 bg-primary/10"
+              : "border-border/60 bg-card/40"
+          )}
+          role="status"
+          aria-live="polite"
+        >
+          {meses.length >= 2 ? (
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-primary px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-primary-foreground">
+              <GitCompareArrows className="h-3 w-3" />
+              Modo comparação · {meses.length} meses
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-foreground">
+              Filtro ativo · 1 mês
+            </span>
+          )}
+
+          <div className="flex flex-wrap items-center gap-1.5">
+            {meses.map((m, i) => (
+              <span key={m} className="flex items-center gap-1">
+                <span className="inline-flex items-center gap-1 rounded-md border border-primary/40 bg-background/60 px-2 py-0.5 font-semibold text-foreground">
+                  {MESES_LBL[m - 1]}
+                  <button
+                    type="button"
+                    onClick={() => setMeses(meses.filter((x) => x !== m))}
+                    className="rounded p-0.5 text-muted-foreground hover:bg-destructive/20 hover:text-destructive"
+                    aria-label={`Remover ${MESES_LBL[m - 1]} da seleção`}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+                {i < meses.length - 1 && (
+                  <span className="text-primary/70 font-bold">+</span>
+                )}
+              </span>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setMeses([])}
+            className="ml-auto rounded-md px-2 py-1 text-[10px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            Limpar seleção
+          </button>
+        </div>
+      )}
     </div>
   );
 }
+
 
 function SelectChip({
   label, value, onChange, options,
