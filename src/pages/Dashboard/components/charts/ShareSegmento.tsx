@@ -37,85 +37,92 @@ export function ShareSegmento({ filtros }: { filtros: Filtros }) {
 
   const truncateLabel = useCallback((value: string) => {
     if (!value) return "";
-    return value.length > 12 ? `${value.slice(0, 11)}…` : value;
+    return value.length > 10 ? `${value.slice(0, 9)}…` : value;
   }, []);
 
-  const chartHeight = Math.max(220, series.length * 38);
+  // Largura mínima por coluna garante barras finas e proporcionais mesmo em telas menores.
+  // Quando o total ultrapassa a largura visível, o container ganha rolagem horizontal.
+  const MIN_COL_WIDTH = 44;
+  const chartInnerWidth = Math.max(series.length * MIN_COL_WIDTH, 320);
 
   return (
     <div className="panel">
-      <div className="mb-4 flex items-start justify-between gap-3">
-        <div>
-          <h3 className="font-display text-lg font-semibold">TPV por Segmento</h3>
-          <p className="text-xs text-muted-foreground">Participação no TPV & Crescimento YoY</p>
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="font-display text-base font-semibold sm:text-lg">TPV por Segmento</h3>
+          <p className="text-[11px] text-muted-foreground sm:text-xs">
+            Participação no TPV & Crescimento YoY · {series.length} segmentos
+          </p>
         </div>
         <div className="text-right shrink-0">
           <span className="block text-[10px] uppercase tracking-widest text-muted-foreground">Total</span>
-          <span className="font-display text-lg font-semibold num-display">{formatBRLCompact(total)}</span>
+          <span className="font-display text-base font-semibold num-display sm:text-lg">{formatBRLCompact(total)}</span>
         </div>
       </div>
 
-      <div style={{ height: 260 }} className="w-full">
-        {series.length === 0 ? (
-          <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
-            Sem dados no período selecionado.
-          </div>
-        ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={series} margin={{ top: 24, right: 12, left: 8, bottom: 40 }}>
-              <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 6" vertical={false} />
-              <XAxis
-                type="category"
-                dataKey="name"
-                stroke="hsl(var(--muted-foreground))"
-                fontSize={10}
-                tickLine={false}
-                axisLine={false}
-                interval={0}
-                angle={-40}
-                textAnchor="end"
-                height={72}
-                tickMargin={8}
-                minTickGap={0}
-                tickFormatter={truncateLabel}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10, fontWeight: 600 }}
-              />
-              <YAxis
-                type="number"
-                stroke="#ffffff"
-                fontSize={10}
-                tickLine={false}
-                axisLine={false}
-                tick={{ fill: "#ffffff" }}
-                tickFormatter={formatBRLCompact}
-              />
-              <Tooltip
-                cursor={{ fill: "hsl(var(--muted) / 0.4)" }}
-                contentStyle={{
-                  background: "hsl(var(--popover))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: 12,
-                  fontSize: 12,
-                  color: "#ffffff",
-                }}
-                labelStyle={{ color: "#ffffff" }}
-                itemStyle={{ color: "#ffffff" }}
-                formatter={tooltipFormatter as any}
-              />
-              <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={20} isAnimationActive animationDuration={600}>
-                {series.map((_, i) => (
-                  <Cell key={i} fill={palette[i % palette.length]} />
-                ))}
-                <LabelList
-                  dataKey="value"
-                  position="top"
-                  formatter={formatBRLCompact as any}
-                  style={{ fill: "#ffffff", fontSize: 10, fontWeight: 600 }}
+      <div className="w-full overflow-x-auto overflow-y-hidden -mx-1 px-1">
+        <div style={{ height: 240, minWidth: chartInnerWidth }}>
+          {series.length === 0 ? (
+            <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
+              Sem dados no período selecionado.
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={series} margin={{ top: 20, right: 8, left: 0, bottom: 8 }}>
+                <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 6" vertical={false} />
+                <XAxis
+                  type="category"
+                  dataKey="name"
+                  stroke="hsl(var(--muted-foreground))"
+                  tickLine={false}
+                  axisLine={false}
+                  interval={0}
+                  angle={-35}
+                  textAnchor="end"
+                  height={64}
+                  tickMargin={6}
+                  minTickGap={0}
+                  tickFormatter={truncateLabel}
+                  tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9, fontWeight: 600 }}
                 />
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        )}
+                <YAxis
+                  type="number"
+                  stroke="#ffffff"
+                  tickLine={false}
+                  axisLine={false}
+                  width={52}
+                  tick={{ fill: "#ffffff", fontSize: 9 }}
+                  tickFormatter={formatBRLCompact}
+                />
+                <Tooltip
+                  cursor={{ fill: "hsl(var(--muted) / 0.4)" }}
+                  contentStyle={{
+                    background: "hsl(var(--popover))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: 10,
+                    fontSize: 11,
+                    color: "#ffffff",
+                    padding: "6px 8px",
+                  }}
+                  labelStyle={{ color: "#ffffff", fontSize: 11, fontWeight: 600 }}
+                  itemStyle={{ color: "#ffffff", fontSize: 11 }}
+                  formatter={tooltipFormatter as any}
+                />
+                <Bar dataKey="value" radius={[3, 3, 0, 0]} maxBarSize={18} isAnimationActive animationDuration={600}>
+                  {series.map((_, i) => (
+                    <Cell key={i} fill={palette[i % palette.length]} />
+                  ))}
+                  <LabelList
+                    dataKey="value"
+                    position="top"
+                    formatter={formatBRLCompact as any}
+                    style={{ fill: "#ffffff", fontSize: 9, fontWeight: 600 }}
+                  />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
       </div>
 
       <ul className="mt-4 space-y-1.5 max-h-[180px] overflow-auto pr-1">
