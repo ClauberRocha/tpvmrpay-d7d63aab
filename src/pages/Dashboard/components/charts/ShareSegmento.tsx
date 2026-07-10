@@ -6,16 +6,8 @@ import { DashboardService } from "../../services/DashboardService";
 import { formatBRL, formatBRLCompact } from "@/data/tpv";
 import type { Filtros } from "@/data/tpv";
 
-const palette = [
-  "hsl(var(--primary))",
-  "hsl(var(--accent-cyan))",
-  "hsl(var(--accent-magenta))",
-  "hsl(var(--accent-green))",
-  "hsl(var(--accent-violet))",
-  "hsl(var(--accent-orange))",
-  "hsl(45 70% 45%)",
-  "hsl(195 60% 35%)",
-];
+const BAR_COLOR = "#51a9cb";
+const palette = [BAR_COLOR];
 
 export function ShareSegmento({ filtros }: { filtros: Filtros }) {
   const { series, total, prevMap } = useMemo(() => {
