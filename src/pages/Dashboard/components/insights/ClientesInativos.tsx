@@ -28,7 +28,7 @@ export function ClientesInativos({ filtros }: { filtros: Filtros }) {
             Matriz de Ociosidade & Risco de Churn (Inatividade)
           </h3>
           <p className="text-xs text-muted-foreground">
-            Clientes inativos (R$ 0,00) por período, probabilidade de abandono e ações de reativação · {periodoTxt}
+            Clientes inativos (R$ 0,00) por período e probabilidade de abandono · {periodoTxt}
           </p>
         </div>
         <div className="text-right text-xs text-muted-foreground">
