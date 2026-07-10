@@ -44,16 +44,29 @@ export function ShareSegmento({ filtros }: { filtros: Filtros }) {
         </div>
       </div>
 
-      <div style={{ height: chartHeight }} className="w-full">
+      <div style={{ height: Math.max(280, chartHeight) }} className="w-full">
         {series.length === 0 ? (
           <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
             Sem dados no período selecionado.
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={series} layout="vertical" margin={{ top: 4, right: 120, left: 8, bottom: 0 }}>
-              <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 6" horizontal={false} />
+            <BarChart data={series} margin={{ top: 24, right: 12, left: 8, bottom: 40 }}>
+              <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 6" vertical={false} />
               <XAxis
+                type="category"
+                dataKey="name"
+                stroke="hsl(var(--muted-foreground))"
+                fontSize={11}
+                tickLine={false}
+                axisLine={false}
+                interval={0}
+                angle={-25}
+                textAnchor="end"
+                height={60}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11, fontWeight: 600 }}
+              />
+              <YAxis
                 type="number"
                 stroke="#ffffff"
                 fontSize={10}
@@ -61,16 +74,6 @@ export function ShareSegmento({ filtros }: { filtros: Filtros }) {
                 axisLine={false}
                 tick={{ fill: "#ffffff" }}
                 tickFormatter={formatBRLCompact}
-              />
-              <YAxis
-                type="category"
-                dataKey="name"
-                stroke="hsl(var(--muted-foreground))"
-                fontSize={11}
-                tickLine={false}
-                axisLine={false}
-                width={130}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11, fontWeight: 600 }}
               />
               <Tooltip
                 cursor={{ fill: "hsl(var(--muted) / 0.4)" }}
@@ -85,13 +88,13 @@ export function ShareSegmento({ filtros }: { filtros: Filtros }) {
                 itemStyle={{ color: "#ffffff" }}
                 formatter={tooltipFormatter as any}
               />
-              <Bar dataKey="value" radius={[0, 6, 6, 0]} isAnimationActive animationDuration={600}>
+              <Bar dataKey="value" radius={[6, 6, 0, 0]} isAnimationActive animationDuration={600}>
                 {series.map((_, i) => (
                   <Cell key={i} fill={palette[i % palette.length]} />
                 ))}
                 <LabelList
                   dataKey="value"
-                  position="right"
+                  position="top"
                   formatter={formatBRLCompact as any}
                   style={{ fill: "#ffffff", fontSize: 10, fontWeight: 600 }}
                 />
