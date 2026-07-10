@@ -16,11 +16,13 @@ export function DashboardCharts() {
   const { filtros } = useDashboard();
   return (
     <>
-      {/* Linha 1: Tendência + Share */}
-      <section className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
-        <div className="xl:col-span-2">
-          <TendenciaTemporal filtros={filtros} />
-        </div>
+      {/* Linha 1: Tendência (full width) */}
+      <section className="mb-6">
+        <TendenciaTemporal filtros={filtros} />
+      </section>
+
+      {/* Linha 2: Share por Segmento (full width) */}
+      <section className="mb-6">
         <ShareSegmento filtros={filtros} />
       </section>
 
