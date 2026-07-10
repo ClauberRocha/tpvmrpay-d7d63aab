@@ -21,7 +21,15 @@ export type TpvData = {
   clienteTs: TsRowK[];
 };
 
-export const tpv = raw as unknown as TpvData;
+const _rawTpv = raw as unknown as TpvData;
+
+// Normaliza casing de segmentos (ex.: "CARTÓRIOS" vs "Cartórios") para que
+// meses gravados com grafias diferentes sejam agregados corretamente.
+const normSeg = (s: string) => (s ?? "").toLocaleUpperCase("pt-BR").trim();
+_rawTpv.segmentoTs = _rawTpv.segmentoTs.map((r) => ({ ...r, k: normSeg(r.k) }));
+_rawTpv.meta.segmentos = Array.from(new Set(_rawTpv.meta.segmentos.map(normSeg))).sort((a, b) => a.localeCompare(b, "pt-BR"));
+
+export const tpv = _rawTpv;
 
 export const MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
