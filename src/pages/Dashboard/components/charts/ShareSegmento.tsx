@@ -1,5 +1,5 @@
 import { useMemo, useCallback } from "react";
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { Bar, BarChart, Cell, CartesianGrid, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { DashboardService } from "../../services/DashboardService";
 
@@ -19,7 +19,6 @@ const palette = [
 
 export function ShareSegmento({ filtros }: { filtros: Filtros }) {
   const { series, total, prevMap } = useMemo(() => {
-    // Filtro de segmento é ignorado para mostrar a participação total/proporcional
     const f = { ...filtros, segmento: "todos" };
     const arr = DashboardService.getRankings("segmentoTs", f, 100);
     const total = arr.reduce((s, x) => s + x.value, 0);
@@ -36,35 +35,53 @@ export function ShareSegmento({ filtros }: { filtros: Filtros }) {
     return { series: arr, total, prevMap };
   }, [filtros]);
 
-  const tooltipFormatter = useCallback((v: number, n: string | number) => [formatBRL(v), String(n)], []);
+  const tooltipFormatter = useCallback((v: number) => [formatBRL(v), "TPV"], []);
+
+  const chartHeight = Math.max(220, series.length * 38);
 
   return (
     <div className="panel">
-      <div className="mb-4">
-        <h3 className="font-display text-lg font-semibold">TPV por Segmento</h3>
-        <p className="text-xs text-muted-foreground">Participação no TPV & Crescimento YoY</p>
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div>
+          <h3 className="font-display text-lg font-semibold">TPV por Segmento</h3>
+          <p className="text-xs text-muted-foreground">Participação no TPV & Crescimento YoY</p>
+        </div>
+        <div className="text-right shrink-0">
+          <span className="block text-[10px] uppercase tracking-widest text-muted-foreground">Total</span>
+          <span className="font-display text-lg font-semibold num-display">{formatBRLCompact(total)}</span>
+        </div>
       </div>
-      <div className="grid grid-cols-1 gap-4 items-center">
-        <div className="h-[220px] w-full min-w-0 relative">
+
+      <div style={{ height: chartHeight }} className="w-full">
+        {series.length === 0 ? (
+          <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
+            Sem dados no período selecionado.
+          </div>
+        ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={series}
-                dataKey="value"
-                nameKey="name"
-                innerRadius={62}
-                outerRadius={92}
-                paddingAngle={2}
-                stroke="hsl(var(--background))"
-                strokeWidth={2}
-                isAnimationActive={true}
-                animationDuration={600}
-              >
-                {series.map((_, i) => (
-                  <Cell key={i} fill={palette[i % palette.length]} />
-                ))}
-              </Pie>
+            <BarChart data={series} layout="vertical" margin={{ top: 4, right: 120, left: 8, bottom: 0 }}>
+              <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 6" horizontal={false} />
+              <XAxis
+                type="number"
+                stroke="#ffffff"
+                fontSize={10}
+                tickLine={false}
+                axisLine={false}
+                tick={{ fill: "#ffffff" }}
+                tickFormatter={formatBRLCompact}
+              />
+              <YAxis
+                type="category"
+                dataKey="name"
+                stroke="hsl(var(--muted-foreground))"
+                fontSize={11}
+                tickLine={false}
+                axisLine={false}
+                width={130}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11, fontWeight: 600 }}
+              />
               <Tooltip
+                cursor={{ fill: "hsl(var(--muted) / 0.4)" }}
                 contentStyle={{
                   background: "hsl(var(--popover))",
                   border: "1px solid hsl(var(--border))",
@@ -76,42 +93,51 @@ export function ShareSegmento({ filtros }: { filtros: Filtros }) {
                 itemStyle={{ color: "#ffffff" }}
                 formatter={tooltipFormatter as any}
               />
-            </PieChart>
+              <Bar dataKey="value" radius={[0, 6, 6, 0]} isAnimationActive animationDuration={600}>
+                {series.map((_, i) => (
+                  <Cell key={i} fill={palette[i % palette.length]} />
+                ))}
+                <LabelList
+                  dataKey="value"
+                  position="right"
+                  formatter={formatBRLCompact as any}
+                  style={{ fill: "#ffffff", fontSize: 10, fontWeight: 600 }}
+                />
+              </Bar>
+            </BarChart>
           </ResponsiveContainer>
-          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Total</span>
-            <span className="font-display text-lg font-semibold num-display">{formatBRLCompact(total)}</span>
-          </div>
-        </div>
-        <ul className="space-y-1.5 max-h-[220px] overflow-auto pr-1">
-          {series.map((s, i) => {
-            const pct = total > 0 ? (s.value / total) * 100 : 0;
-            const prevVal = prevMap.get(s.name) ?? 0;
-            const growth = prevVal > 0 ? ((s.value - prevVal) / prevVal) * 100 : 0;
-            return (
-              <li key={s.name} className="flex items-center justify-between gap-3 text-sm">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="h-2.5 w-2.5 rounded-sm shrink-0" style={{ background: palette[i % palette.length] }} />
-                  <span className="truncate text-foreground/90">{s.name}</span>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <span className="text-muted-foreground num-display text-xs">{formatBRL(s.value)}</span>
-                  {prevVal > 0 && (
-                    <span className={`text-[10px] font-semibold num-display rounded-md px-1.5 py-0.5 ${
-                      growth >= 0
-                        ? "text-success"
-                        : "bg-destructive text-white shadow-sm shadow-destructive/40"
-                    }`}>
-                      {growth >= 0 ? "↑" : "↓"}{Math.abs(growth).toFixed(0)}%
-                    </span>
-                  )}
-                  <span className="font-mono text-xs font-semibold text-foreground w-12 text-right">{pct.toFixed(1)}%</span>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+        )}
       </div>
+
+      <ul className="mt-4 space-y-1.5 max-h-[180px] overflow-auto pr-1">
+        {series.map((s, i) => {
+          const pct = total > 0 ? (s.value / total) * 100 : 0;
+          const prevVal = prevMap.get(s.name) ?? 0;
+          const growth = prevVal > 0 ? ((s.value - prevVal) / prevVal) * 100 : 0;
+          return (
+            <li key={s.name} className="flex items-center justify-between gap-3 text-sm">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="h-2.5 w-2.5 rounded-sm shrink-0" style={{ background: palette[i % palette.length] }} />
+                <span className="truncate text-foreground/90">{s.name}</span>
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                <span className="text-muted-foreground num-display text-xs">{formatBRL(s.value)}</span>
+                {prevVal > 0 && (
+                  <span className={`text-[10px] font-semibold num-display rounded-md px-1.5 py-0.5 ${
+                    growth >= 0
+                      ? "text-success"
+                      : "bg-destructive text-white shadow-sm shadow-destructive/40"
+                  }`}>
+                    {growth >= 0 ? "↑" : "↓"}{Math.abs(growth).toFixed(0)}%
+                  </span>
+                )}
+                <span className="font-mono text-xs font-semibold text-foreground w-12 text-right">{pct.toFixed(1)}%</span>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+
       {(() => {
         const lider = series[0];
         const liderPct = lider && total > 0 ? (lider.value / total) * 100 : 0;
