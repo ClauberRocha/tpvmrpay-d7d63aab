@@ -1,4 +1,4 @@
-import { GitCompareArrows, Info, X } from "lucide-react";
+import { AlertTriangle, GitCompareArrows, Info, X } from "lucide-react";
 
 import { tpv, type Periodo } from "@/data/tpv";
 import { cn } from "@/lib/utils";
@@ -14,9 +14,15 @@ interface FiltrosProps {
   setSegmento: (s: string) => void;
   uf: string;
   setUf: (u: string) => void;
+  /** Meses removidos automaticamente por incompatibilidade com o ano atual. */
+  mesesDescartados?: number[];
+  onDismissAviso?: () => void;
 }
 
-export function Filtros({ ano, setAno, meses, setMeses, segmento, setSegmento, uf, setUf }: FiltrosProps) {
+export function Filtros({
+  ano, setAno, meses, setMeses, segmento, setSegmento, uf, setUf,
+  mesesDescartados = [], onDismissAviso,
+}: FiltrosProps) {
   const anos: Periodo[] = ["todos", ...tpv.meta.anos];
 
   // Meses disponíveis (união se "todos os anos")
@@ -111,6 +117,31 @@ export function Filtros({ ano, setAno, meses, setMeses, segmento, setSegmento, u
             </button>
           );
         })}
+
+        {/* Badge de normalização: meses foram descartados pela troca de ano */}
+        {mesesDescartados.length > 0 && (
+          <span
+            role="status"
+            aria-live="polite"
+            className="ml-2 inline-flex items-center gap-1.5 rounded-md border border-chart-orange/50 bg-chart-orange/15 px-2 py-1 text-[10px] font-semibold text-chart-orange"
+            title={`Os meses ${mesesDescartados
+              .map((m) => MESES_LBL[m - 1])
+              .join(", ")} foram removidos porque não existem em ${
+              ano === "todos" ? "todos os anos" : ano
+            }.`}
+          >
+            <AlertTriangle className="h-3 w-3" />
+            {mesesDescartados.length} {mesesDescartados.length === 1 ? "mês removido" : "meses removidos"} ({mesesDescartados.map((m) => MESES_LBL[m - 1]).join(", ")})
+            <button
+              type="button"
+              onClick={onDismissAviso}
+              className="rounded p-0.5 hover:bg-chart-orange/25"
+              aria-label="Dispensar aviso"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </span>
+        )}
 
         {/* Dica de atalho quando nada está em modo comparação */}
         {meses.length <= 1 && (

@@ -13,7 +13,10 @@ import { ScrollToTopButton } from "@/components/ScrollToTopButton";
 import { dimensionRanking, tpv } from "@/data/tpv";
 
 const DashboardContent = () => {
-  const { filtros, ano, setAno, meses, setMeses, segmento, setSegmento, uf, setUf } = useDashboardFilter();
+  const {
+    filtros, ano, setAno, meses, setMeses, segmento, setSegmento, uf, setUf,
+    mesesDescartados, dismissAvisoNormalizacao,
+  } = useDashboardFilter();
 
   const activeClientsCount = useMemo(() => dimensionRanking(tpv.clienteTs, filtros).length, [filtros]);
   const activeUfsCount = useMemo(() => dimensionRanking(tpv.ufTs, { ...filtros, uf: "todos" }).length, [filtros]);
@@ -30,6 +33,8 @@ const DashboardContent = () => {
             meses={meses} setMeses={setMeses}
             segmento={segmento} setSegmento={setSegmento}
             uf={uf} setUf={setUf}
+            mesesDescartados={mesesDescartados}
+            onDismissAviso={dismissAvisoNormalizacao}
           />
         </div>
 
