@@ -80,8 +80,9 @@ describe("Filtros — comportamento do filtro de meses", () => {
     expect(spy).toHaveBeenLastCalledWith([6], 2026);
   });
 
-  it("mostra contagem correta quando há multi-seleção parcial", () => {
+  it("indica visualmente o modo comparação quando há multi-seleção", () => {
     render(<Harness initialAno={2026} initialMeses={[3, 6]} />);
-    expect(screen.getByText(/2 meses selecionados/i)).toBeInTheDocument();
+    expect(screen.getByText(/Modo comparação/i)).toBeInTheDocument();
+    expect(screen.getByText(/2 meses/i)).toBeInTheDocument();
   });
 });
