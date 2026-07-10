@@ -130,29 +130,64 @@ export function ComparativoAnual() {
                 fontSize: 12,
                 color: "#ffffff",
               }}
-              labelStyle={{ color: "#ffffff" }}
+              labelStyle={{ color: "#ffffff", fontWeight: 600, marginBottom: 4 }}
               itemStyle={{ color: "#ffffff" }}
-              formatter={((v: number, name: string) => {
-                if (name === "Variação % YoY") return [`${v >= 0 ? "+" : ""}${v.toFixed(1)}%`, name];
-                return [formatBRL(v), name];
-              }) as any}
+              content={({ active, payload, label }: any) => {
+                if (!active || !payload?.length) return null;
+                const row = payload[0]?.payload ?? {};
+                const v2025 = row["2025"] ?? 0;
+                const v2026 = row["2026"] ?? 0;
+                const variacao: number | null = row.variacao;
+                const varColor = variacao == null ? "#ffffff" : variacao < 0 ? COR_NEG : COR_POS;
+                const varText = variacao == null
+                  ? "—"
+                  : `${variacao >= 0 ? "+" : ""}${variacao.toFixed(1)}%`;
+                return (
+                  <div style={{
+                    background: "hsl(var(--popover))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: 12,
+                    padding: "8px 12px",
+                    fontSize: 12,
+                    color: "#ffffff",
+                    minWidth: 200,
+                  }}>
+                    <div style={{ fontWeight: 600, marginBottom: 6 }}>{label}</div>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                      <span style={{ color: COR_2025 }}>● TPV 2025</span>
+                      <span>{formatBRL(v2025)}</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                      <span style={{ color: COR_2026 }}>● TPV 2026</span>
+                      <span>{formatBRL(v2026)}</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginTop: 4, paddingTop: 4, borderTop: "1px solid hsl(var(--border))" }}>
+                      <span style={{ color: varColor }}>Variação % YoY</span>
+                      <span style={{ color: varColor, fontWeight: 700 }}>{varText}</span>
+                    </div>
+                  </div>
+                );
+              }}
             />
             <Legend wrapperStyle={{ color: "#ffffff", fontSize: 12, paddingTop: 8 }} />
-            <Bar yAxisId="left" dataKey="2025" fill={COR_2025} radius={[6, 6, 0, 0]} maxBarSize={56}>
+            <Bar yAxisId="left" dataKey="2025" name="TPV 2025 (R$)" fill={COR_2025} radius={[6, 6, 0, 0]} maxBarSize={56}>
               <LabelList dataKey="2025" position="top" fill="#ffffff" fontSize={10}
                 formatter={formatBRLCompact as any} />
             </Bar>
-            <Bar yAxisId="left" dataKey="2026" fill={COR_2026} radius={[6, 6, 0, 0]} maxBarSize={56}>
+            <Bar yAxisId="left" dataKey="2026" name="TPV 2026 (R$)" fill={COR_2026} radius={[6, 6, 0, 0]} maxBarSize={56}>
               <LabelList dataKey="2026" position="top" fill="#ffffff" fontSize={10}
                 formatter={formatBRLCompact as any} />
             </Bar>
-            <Line yAxisId="right" type="monotone" dataKey="variacao" name="Variação % YoY"
-              stroke="hsl(var(--success))" strokeWidth={2.5}
-              dot={{ r: 4, fill: "hsl(var(--success))" }}
-              activeDot={{ r: 6 }}>
-              <LabelList dataKey="variacao" position="top" fill="#ffffff" fontSize={10}
-                formatter={labelListPercentFormatter as any} />
+            <Line yAxisId="right" type="monotone" dataKey="variacao" name="Variação % YoY (2026 vs. 2025)"
+              stroke="#ffffff" strokeWidth={2} strokeDasharray="4 4"
+              connectNulls={false}
+              dot={renderVarDot}
+              activeDot={{ r: 6 }}
+              isAnimationActive={false}
+            >
+              <LabelList dataKey="variacao" content={renderVarLabel as any} />
             </Line>
+
           </ComposedChart>
         </ResponsiveContainer>
       </div>
