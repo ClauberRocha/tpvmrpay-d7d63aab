@@ -1,6 +1,6 @@
 import { useMemo, useCallback } from "react";
 import {
-  Bar, BarChart, CartesianGrid, Cell, LabelList, Legend, ReferenceLine,
+  Bar, CartesianGrid, ComposedChart, LabelList, Legend, Line,
   ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
 
@@ -37,9 +37,8 @@ export function ComparativoAnual() {
       });
   }, []);
 
-  const tooltipFormatter1 = useCallback((v: number, name: string | number) => [formatBRL(v), String(name)], []);
-  const tooltipFormatter2 = useCallback((v: number) => [`${v >= 0 ? "+" : ""}${v.toFixed(1)}%`, "Variação YoY"], []);
   const yAxisPercentFormatter = useCallback((v: number) => `${v.toFixed(0)}%`, []);
+
   const labelListPercentFormatter = useCallback((v: number) => `${v >= 0 ? "+" : ""}${v.toFixed(1)}%`, []);
 
   const total2025 = data.reduce((s, d) => s + d["2025"], 0);
@@ -84,14 +83,16 @@ export function ComparativoAnual() {
         </div>
       </div>
 
-      {/* Gráfico 1: Colunas agrupadas TPV 2025 vs 2026 */}
-      <div className="h-[320px] w-full">
+      {/* Gráfico: Colunas agrupadas TPV 2025 vs 2026 + linha Variação % YoY */}
+      <div className="h-[360px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 24, right: 12, left: -8, bottom: 0 }} barCategoryGap="25%" barGap={2}>
+          <ComposedChart data={data} margin={{ top: 24, right: 12, left: -8, bottom: 0 }} barCategoryGap="25%" barGap={2}>
             <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 6" vertical={false} />
             <XAxis dataKey="label" stroke="#ffffff" fontSize={12} tickLine={false} axisLine={false} tick={{ fill: "#ffffff" }} />
-            <YAxis stroke="#ffffff" fontSize={11} tickLine={false} axisLine={false} tick={{ fill: "#ffffff" }}
+            <YAxis yAxisId="left" stroke="#ffffff" fontSize={11} tickLine={false} axisLine={false} tick={{ fill: "#ffffff" }}
               tickFormatter={formatBRLCompact} />
+            <YAxis yAxisId="right" orientation="right" stroke="#ffffff" fontSize={11} tickLine={false} axisLine={false}
+              tick={{ fill: "#ffffff" }} tickFormatter={yAxisPercentFormatter} />
             <Tooltip
               cursor={{ fill: "hsl(var(--muted) / 0.25)" }}
               contentStyle={{
@@ -103,59 +104,31 @@ export function ComparativoAnual() {
               }}
               labelStyle={{ color: "#ffffff" }}
               itemStyle={{ color: "#ffffff" }}
-              formatter={tooltipFormatter1 as any}
+              formatter={((v: number, name: string) => {
+                if (name === "Variação % YoY") return [`${v >= 0 ? "+" : ""}${v.toFixed(1)}%`, name];
+                return [formatBRL(v), name];
+              }) as any}
             />
             <Legend wrapperStyle={{ color: "#ffffff", fontSize: 12, paddingTop: 8 }} />
-            <Bar dataKey="2025" fill={COR_2025} radius={[6, 6, 0, 0]} maxBarSize={56}>
+            <Bar yAxisId="left" dataKey="2025" fill={COR_2025} radius={[6, 6, 0, 0]} maxBarSize={56}>
               <LabelList dataKey="2025" position="top" fill="#ffffff" fontSize={10}
                 formatter={formatBRLCompact as any} />
             </Bar>
-            <Bar dataKey="2026" fill={COR_2026} radius={[6, 6, 0, 0]} maxBarSize={56}>
+            <Bar yAxisId="left" dataKey="2026" fill={COR_2026} radius={[6, 6, 0, 0]} maxBarSize={56}>
               <LabelList dataKey="2026" position="top" fill="#ffffff" fontSize={10}
                 formatter={formatBRLCompact as any} />
             </Bar>
-          </BarChart>
+            <Line yAxisId="right" type="monotone" dataKey="variacao" name="Variação % YoY"
+              stroke="hsl(var(--success))" strokeWidth={2.5}
+              dot={{ r: 4, fill: "hsl(var(--success))" }}
+              activeDot={{ r: 6 }}>
+              <LabelList dataKey="variacao" position="top" fill="#ffffff" fontSize={10}
+                formatter={labelListPercentFormatter as any} />
+            </Line>
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
 
-      {/* Gráfico 2: Variação % YoY */}
-      <div className="mt-6">
-        <div className="mb-2 flex items-baseline justify-between">
-          <h4 className="text-sm font-semibold text-foreground">Variação % YoY (2026 vs. 2025)</h4>
-          <span className="text-xs text-white">Crescimento por mês</span>
-        </div>
-        <div className="h-[180px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} margin={{ top: 24, right: 12, left: -8, bottom: 0 }}>
-              <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 6" vertical={false} />
-              <XAxis dataKey="label" stroke="#ffffff" fontSize={12} tickLine={false} axisLine={false} tick={{ fill: "#ffffff" }} />
-              <YAxis stroke="#ffffff" fontSize={11} tickLine={false} axisLine={false} tick={{ fill: "#ffffff" }}
-                tickFormatter={yAxisPercentFormatter} />
-              <Tooltip
-                cursor={{ fill: "hsl(var(--muted) / 0.25)" }}
-                contentStyle={{
-                  background: "hsl(var(--popover))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: 12,
-                  fontSize: 12,
-                  color: "#ffffff",
-                }}
-                labelStyle={{ color: "#ffffff" }}
-                itemStyle={{ color: "#ffffff" }}
-                formatter={tooltipFormatter2 as any}
-              />
-              <ReferenceLine y={0} stroke="#ffffff" strokeWidth={2} />
-              <Bar dataKey="variacao" radius={[6, 6, 6, 6]} maxBarSize={56}>
-                {data.map((d, i) => (
-                  <Cell key={i} fill={d.variacao >= 0 ? "hsl(var(--success))" : "#F42722"} />
-                ))}
-                <LabelList dataKey="variacao" position="top" fill="#ffffff" fontSize={11}
-                  formatter={labelListPercentFormatter as any} />
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
 
       <p className="mt-4 rounded-lg border border-border/50 bg-muted/20 px-3 py-2 text-xs text-white">
         <span className="font-semibold text-white">Análise: </span>
