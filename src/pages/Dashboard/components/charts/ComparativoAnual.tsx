@@ -247,6 +247,44 @@ export function ComparativoAnual() {
       </div>
 
 
+      {/* Ranking de meses com maior queda YoY */}
+      {quedas.length > 0 && (
+        <div className="mt-5 rounded-xl border border-destructive/40 bg-destructive/5 p-4">
+          <div className="mb-3 flex items-center gap-2">
+            <div className="rounded-lg bg-destructive/15 p-1.5 text-destructive">
+              <TrendingDown className="h-4 w-4" />
+            </div>
+            <div>
+              <h4 className="text-sm font-semibold text-foreground">Ranking de meses com maior queda</h4>
+              <p className="text-[11px] text-muted-foreground">
+                Meses em que 2026 ficou abaixo de 2025 · ordenados pela maior retração
+              </p>
+            </div>
+          </div>
+          <ol className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {quedas.map((q, i) => (
+              <li
+                key={q.label}
+                className="flex items-center justify-between gap-3 rounded-lg border border-destructive/30 bg-background/40 px-3 py-2"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-destructive text-[11px] font-bold text-white">
+                    {i + 1}
+                  </span>
+                  <span className="text-sm font-semibold text-foreground truncate">{q.label}</span>
+                </div>
+                <div className="text-right">
+                  <div className="num-display text-sm font-bold text-destructive">
+                    {q.variacao.toFixed(1)}%
+                  </div>
+                  <div className="text-[10px] text-muted-foreground">{formatBRL(q.diff)}</div>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+
       <p className="mt-4 rounded-lg border border-border/50 bg-muted/20 px-3 py-2 text-xs text-white">
         <span className="font-semibold text-white">Análise: </span>
         No acumulado {periodo}, 2026 soma {formatBRL(total2026)} contra {formatBRL(total2025)} em 2025
