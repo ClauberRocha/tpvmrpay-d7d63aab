@@ -59,14 +59,36 @@ export function ComparativoAnual() {
   const renderVarLabel = useCallback((props: any) => {
     const { x, y, value } = props;
     if (value == null) return null;
-    const fill = value < 0 ? COR_NEG : COR_POS;
+    const negative = value < 0;
+    const fill = negative ? "#ffffff" : COR_POS;
     const text = `${value >= 0 ? "+" : ""}${Number(value).toFixed(1)}%`;
+    const charW = 6;
+    const padX = 6;
+    const padY = 3;
+    const w = text.length * charW + padX * 2;
+    const h = 14 + padY;
     return (
-      <text x={x} y={y - 8} fill={fill} fontSize={10} textAnchor="middle" fontWeight={600}>
-        {text}
-      </text>
+      <g>
+        {negative && (
+          <rect
+            x={x - w / 2}
+            y={y - 8 - h + 3}
+            width={w}
+            height={h}
+            rx={4}
+            ry={4}
+            fill={COR_NEG}
+            stroke={COR_NEG}
+            opacity={0.95}
+          />
+        )}
+        <text x={x} y={y - 8} fill={fill} fontSize={10} textAnchor="middle" fontWeight={700}>
+          {text}
+        </text>
+      </g>
     );
   }, []);
+
 
 
   const total2025 = data.reduce((s, d) => s + d["2025"], 0);
