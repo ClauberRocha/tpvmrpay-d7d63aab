@@ -91,11 +91,8 @@ export function TopClientes({ filtros }: { filtros: Filtros }) {
               <th className="px-4 py-3 text-right font-medium">TPV</th>
               <th className="px-4 py-3 text-right font-medium">Pedidos</th>
               <th className="px-4 py-3 text-right font-medium">Ticket Médio</th>
-              <th className="px-4 py-3 text-right font-medium">LTV</th>
               <th className="px-4 py-3 text-center font-medium">Cresc. ano a ano</th>
-              <th className="px-4 py-3 text-center font-medium">Inadimp.</th>
-              <th className="px-4 py-3 text-center font-medium">Última Compra</th>
-              <th className="px-4 py-3 text-center font-medium">Status</th>
+
             </tr>
           </thead>
           <tbody>
