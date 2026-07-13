@@ -1,4 +1,8 @@
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, FileSpreadsheet } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { exportToCsv } from "@/utils/exportCsv";
+
 
 
 import { useDashboard } from "../../hooks/useDashboard";
@@ -29,11 +33,35 @@ export function ClientesInativos({ filtros }: { filtros: Filtros }) {
             Clientes inativos (R$ 0,00) por período e probabilidade de abandono · {periodoTxt}
           </p>
         </div>
-        <div className="text-right text-xs text-muted-foreground">
-          <div><span className="font-semibold text-foreground">{rows.length}</span> com lacunas</div>
-          <div><span className="font-semibold text-chart-orange">{totalmenteInativos}</span> totalmente inativos</div>
+        <div className="flex items-center gap-4">
+          <div className="text-right text-xs text-muted-foreground">
+            <div><span className="font-semibold text-foreground">{rows.length}</span> com lacunas</div>
+            <div><span className="font-semibold text-chart-orange">{totalmenteInativos}</span> totalmente inativos</div>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-2"
+            disabled={rows.length === 0}
+            onClick={() => {
+              const headers = ["Cliente", "Proprietário", ...mesesSel.map((m) => MESES_LBL[m - 1]), "Faltas", "Total Meses", "Risco Churn (%)"];
+              const data = rows.map((r) => [
+                r.name,
+                ownersMap[r.name] || "não vinculado",
+                ...mesesSel.map((m) => (r.meses[m] ? "OK" : "0")),
+                r.faltas,
+                mesesSel.length,
+                r.churnScore,
+              ]);
+              exportToCsv(data, `matriz-ociosidade-churn-${new Date().toISOString().slice(0, 10)}.csv`, headers);
+            }}
+          >
+            <FileSpreadsheet className="h-4 w-4" />
+            Exportar Excel
+          </Button>
         </div>
       </div>
+
 
       <div className="max-h-[480px] overflow-auto rounded-xl border border-border/60">
         <table className="w-full text-sm min-w-[700px]">
