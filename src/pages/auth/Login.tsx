@@ -17,8 +17,8 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
 
   if (!loading && session) {
-    const from = (location.state as { from?: { pathname?: string } })?.from?.pathname ?? "/";
-    return <Navigate to={from} replace />;
+    const from = (location.state as { from?: { pathname?: string } })?.from?.pathname;
+    return <Navigate to={from && from !== "/" ? from : "/dashboard"} replace />;
   }
 
   const onSubmit = async (e: FormEvent) => {
