@@ -155,10 +155,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const humanizeAuthError = (raw: string): string => {
     const msg = (raw || "").toLowerCase();
     if (msg.includes("invalid login credentials") || msg.includes("invalid_credentials")) {
-      return "E-mail ou senha incorretos.";
+      return "E-mail ou senha incorretos. Se você ainda não recebeu um convite, solicite acesso ao administrador do sistema.";
     }
     if (msg.includes("email not confirmed")) {
-      return "Confirme seu e-mail antes de entrar.";
+      return "Seu e-mail ainda não foi confirmado. Verifique sua caixa de entrada ou peça ao administrador para reenviar o convite.";
     }
     if (msg.includes("too many requests") || msg.includes("rate limit")) {
       return "Muitas tentativas em pouco tempo. Aguarde alguns minutos.";
