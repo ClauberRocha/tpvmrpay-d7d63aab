@@ -26,10 +26,13 @@ export default function Login() {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
+    perfReset();
+    perfMark("login_submit");
     const { error: err } = await signIn(email, password);
     setSubmitting(false);
     if (err) setError(err);
   };
+
 
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-background px-4 py-10 overflow-hidden">
