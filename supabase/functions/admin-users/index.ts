@@ -268,24 +268,43 @@ Deno.serve(async (req) => {
 
       case "reset_password": {
         const id = String(payload.id);
-        const { data: prof } = await admin.from("profiles").select("email").eq("id", id).single();
-        if (!prof) return json({ error: "not_found" }, 404);
-        await admin.auth.admin.updateUserById(id, {}); // no-op safety
-        const { error } = await admin.auth.admin.generateLink({
-          type: "recovery",
-          email: prof.email,
+        const origin = String(payload.origin ?? "");
+        console.log("[reset_password] start", { id, origin });
+        const { data: prof, error: profErr } = await admin
+          .from("profiles").select("email").eq("id", id).single();
+        if (profErr || !prof) {
+          console.log("[reset_password] profile not found", profErr?.message);
+          return json({ error: "not_found" }, 404);
+        }
+        console.log("[reset_password] target email", prof.email);
+
+        // O envio efetivo do e-mail passa pelo fluxo público do GoTrue.
+        // Chamar com o service_role NÃO dispara e-mail — precisa ser via anon.
+        const anon = createClient(SUPABASE_URL, ANON);
+        const { error: sendErr } = await anon.auth.resetPasswordForEmail(prof.email, {
+          redirectTo: `${origin}/set-password`,
         });
-        if (error) throw error;
-        // Enviar e-mail: usa resetPasswordForEmail via user client (mais simples)
-        await admin.auth.resetPasswordForEmail(prof.email, {
-          redirectTo: `${payload.origin ?? ""}/set-password`,
+        console.log("[reset_password] send result:", {
+          err: sendErr?.message,
+          code: (sendErr as { code?: string })?.code,
+          status: (sendErr as { status?: number })?.status,
         });
+        if (sendErr) {
+          await admin.from("audit_logs").insert({
+            user_id: caller.id, user_email: caller.email, user_role: "admin",
+            action: "password_reset_failed", result: "failure",
+            description: `Falha ao enviar reset para ${prof.email}: ${sendErr.message}`,
+          });
+          return json({ error: sendErr.message }, 500);
+        }
+
         await admin.from("profiles").update({ must_change_password: true }).eq("id", id);
         await admin.from("audit_logs").insert({
           user_id: caller.id, user_email: caller.email, user_role: "admin",
           action: "password_reset_sent", description: `Reset enviado para ${prof.email}`,
         });
-        return json({ ok: true });
+        console.log("[reset_password] done");
+        return json({ ok: true, email: prof.email });
       }
 
       case "delete": {
