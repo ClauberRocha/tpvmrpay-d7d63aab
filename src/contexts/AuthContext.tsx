@@ -83,9 +83,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(sess);
       if (sess?.user) {
         setTimeout(() => loadProfile(sess.user.id), 0);
-        // Prefetch fora do callback: chamar supabase.* de forma síncrona aqui
-        // causa deadlock e o token não é anexado (edge fn responde 401).
-        setTimeout(() => { void loadTpvData().catch(() => {}); }, 0);
       } else {
         setProfile(null);
         setRole(null);
@@ -95,7 +92,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       if (data.session?.user) {
-        void loadTpvData().catch(() => {});
         loadProfile(data.session.user.id).finally(() => setLoading(false));
       } else {
         setLoading(false);
@@ -103,6 +99,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     return () => sub.subscription.unsubscribe();
   }, [loadProfile]);
+
+  // Gatekeeper: só faz prefetch dos dados protegidos quando confirmarmos que
+  // (1) o perfil foi lido via RLS (has_role/is_admin executáveis), (2) a conta
+  // está ativa e (3) o usuário tem uma role atribuída. Sem isso, a edge fn
+  // responderia 401/403 e envenenaria o cache.
+  useEffect(() => {
+    if (!session?.user) return;
+    if (!profile || profile.is_active === false) return;
+    if (!role) return;
+    void loadTpvData().catch(() => { /* Dashboard exibe erro se falhar */ });
+  }, [session?.user, profile, role]);
+
 
   // ==== Configuração de sessão ====
   // Tempo de inatividade antes do logout automático (30 min)
