@@ -58,7 +58,9 @@ export function DashboardHeader() {
           <Download className="h-4 w-4" />
           Baixar PDF
         </Button>
-        <Button size="sm" variant="ghost" onClick={signOut} title="Sair"><LogOut className="h-4 w-4" /></Button>
+        <Button size="sm" variant="outline" onClick={signOut} className="gap-2" title="Sair do sistema">
+          <LogOut className="h-4 w-4" /> Sair do sistema
+        </Button>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Activity className="h-4 w-4 text-primary" />
           {role === "admin" ? "Admin" : role === "manager" ? "Gestor" : "Usuário"} · {lastUpdate}
