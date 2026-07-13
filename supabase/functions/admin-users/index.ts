@@ -75,26 +75,33 @@ Deno.serve(async (req) => {
   }
 
   const authHeader = req.headers.get("Authorization");
+  console.log("[admin-users] auth header present:", !!authHeader, "len:", authHeader?.length ?? 0);
   if (!authHeader) return json({ error: "missing_auth" }, 401);
 
   const token = authHeader.replace(/^Bearer\s+/i, "");
+  const tokenPreview = token.length > 20 ? `${token.slice(0, 12)}…${token.slice(-6)}` : "(too short)";
+  console.log("[admin-users] token preview:", tokenPreview);
+
   const anonClient = createClient(SUPABASE_URL, ANON);
   const { data: claimsData, error: claimsErr } = await anonClient.auth.getClaims(token);
   if (claimsErr || !claimsData?.claims?.sub) {
-    console.log("getClaims failed", claimsErr?.message);
+    console.log("[admin-users] getClaims FAILED:", claimsErr?.message, "code:", (claimsErr as { code?: string })?.code);
     return json({ error: "unauthorized", detail: claimsErr?.message }, 401);
   }
   const callerId = claimsData.claims.sub as string;
   const callerEmail = (claimsData.claims.email as string | undefined) ?? "";
+  const callerRoleClaim = (claimsData.claims.role as string | undefined) ?? "";
   const caller = { id: callerId, email: callerEmail };
+  console.log("[admin-users] claims OK:", { sub: callerId, email: callerEmail, role: callerRoleClaim, exp: claimsData.claims.exp });
 
-  // Verifica se é admin
-  const { data: roles } = await admin
+  const { data: roles, error: rolesErr } = await admin
     .from("user_roles")
     .select("role")
     .eq("user_id", caller.id);
+  console.log("[admin-users] user_roles lookup:", { rows: roles?.length ?? 0, roles, err: rolesErr?.message });
   const isAdmin = roles?.some((r) => r.role === "admin");
   if (!isAdmin) {
+    console.log("[admin-users] not admin, denying:", caller.email);
     await admin.from("audit_logs").insert({
       user_id: caller.id,
       user_email: caller.email,
