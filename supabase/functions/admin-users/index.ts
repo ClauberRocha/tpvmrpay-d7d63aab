@@ -1,6 +1,6 @@
 // Edge function para gerenciamento administrativo de usuários.
 // Só executa se o chamador for administrador. Usa service role internamente.
-import { createClient } from "npm:@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2.58.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -77,13 +77,16 @@ Deno.serve(async (req) => {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) return json({ error: "missing_auth" }, 401);
 
-  const userClient = createClient(SUPABASE_URL, ANON, {
-    global: { headers: { Authorization: authHeader } },
-  });
-
-  const { data: userData, error: userErr } = await userClient.auth.getUser();
-  if (userErr || !userData.user) return json({ error: "unauthorized" }, 401);
-  const caller = userData.user;
+  const token = authHeader.replace(/^Bearer\s+/i, "");
+  const anonClient = createClient(SUPABASE_URL, ANON);
+  const { data: claimsData, error: claimsErr } = await anonClient.auth.getClaims(token);
+  if (claimsErr || !claimsData?.claims?.sub) {
+    console.log("getClaims failed", claimsErr?.message);
+    return json({ error: "unauthorized", detail: claimsErr?.message }, 401);
+  }
+  const callerId = claimsData.claims.sub as string;
+  const callerEmail = (claimsData.claims.email as string | undefined) ?? "";
+  const caller = { id: callerId, email: callerEmail };
 
   // Verifica se é admin
   const { data: roles } = await admin
