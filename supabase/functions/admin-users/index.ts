@@ -36,6 +36,13 @@ Deno.serve(async (req) => {
   try { bodyPeek = await req.clone().json(); } catch { /* ignore */ }
 
   if (bodyPeek?.action === "bootstrap_admin") {
+    // Guarded by a shared secret so unauthenticated callers cannot spam invite/
+    // recovery emails to the admin address or probe whether the account exists.
+    const expected = Deno.env.get("BOOTSTRAP_SECRET");
+    const provided = req.headers.get("x-bootstrap-secret") ?? "";
+    if (!expected || provided.length === 0 || provided !== expected) {
+      return json({ error: "forbidden" }, 403);
+    }
     const email = "clauber.rocha@mrpay.com.br";
     const origin = String((bodyPeek.payload as Record<string, unknown> | undefined)?.origin ?? "");
     // Se ainda não existir na auth, convida; senão apenas envia recovery
