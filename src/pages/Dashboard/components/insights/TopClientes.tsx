@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, ArrowUpDown, Download } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, FileSpreadsheet } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { useDashboard } from "../../hooks/useDashboard";
