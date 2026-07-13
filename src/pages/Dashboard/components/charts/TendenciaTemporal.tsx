@@ -6,6 +6,7 @@ import {
 
 import { formatBRL, formatBRLCompact, formatNumber, MESES, monthlySeries, totalsFiltered, type Filtros } from "@/data/tpv";
 import { BUILD_ID, hardReload, purgeClientCaches } from "@/lib/buildInfo";
+import { exportToCsv } from "@/utils/exportCsv";
 
 export function TendenciaTemporal({ filtros }: { filtros: Filtros }) {
   const [ready, setReady] = useState(false);
@@ -254,14 +255,96 @@ export function TendenciaTemporal({ filtros }: { filtros: Filtros }) {
 
             <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/40 pt-2 text-[11px] text-muted-foreground">
               <span>Build: <span className="num-display text-white">{BUILD_ID}</span></span>
-              <button
-                type="button"
-                onClick={async () => { await purgeClientCaches(); hardReload(); }}
-                className="rounded-md border border-border/60 bg-background/40 px-2 py-1 text-white hover:bg-muted/30"
-              >
-                Limpar cache e recarregar
-              </button>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+                    const rows = series.map((p) => [
+                      p.label,
+                      p.ano,
+                      p.mes,
+                      p.tpv,
+                      total > 0 ? ((p.tpv / total) * 100).toFixed(2) : "0.00",
+                    ]);
+                    rows.push(["Σ Soma", "", "", total, "100.00"]);
+                    rows.push([]);
+                    rows.push(["Metadados", "", "", "", ""]);
+                    rows.push(["Periodo", periodoLabel, "", "", ""]);
+                    rows.push(["Transacoes", totalTx, "", "", ""]);
+                    rows.push(["TPV_serie", total, "", "", ""]);
+                    rows.push(["TPV_referencia", totalsFiltered(filtros).tpv, "", "", ""]);
+                    rows.push(["Filtro_ano", anoLabel, "", "", ""]);
+                    rows.push(["Filtro_meses", mesesLabel, "", "", ""]);
+                    rows.push(["Filtro_segmento", filtros.segmento, "", "", ""]);
+                    rows.push(["Filtro_uf", filtros.uf, "", "", ""]);
+                    rows.push(["Build", BUILD_ID, "", "", ""]);
+                    exportToCsv(rows, `auditoria_tpv_${stamp}.csv`, [
+                      "Mes",
+                      "Ano",
+                      "MesNum",
+                      "TPV_Reais",
+                      "Pct_do_total",
+                    ]);
+                  }}
+                  className="rounded-md border border-border/60 bg-background/40 px-2 py-1 text-white hover:bg-muted/30"
+                >
+                  ⬇ Exportar CSV
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+                    const payload = {
+                      build: BUILD_ID,
+                      geradoEm: new Date().toISOString(),
+                      periodo: periodoLabel,
+                      filtros: {
+                        ano: anoLabel,
+                        meses: mesesLabel,
+                        segmento: filtros.segmento,
+                        uf: filtros.uf,
+                      },
+                      totais: {
+                        tpvSerie: total,
+                        tpvReferencia: totalsFiltered(filtros).tpv,
+                        diferenca: total - totalsFiltered(filtros).tpv,
+                        transacoes: totalTx,
+                        mediaMensal: media,
+                      },
+                      mismatch,
+                      serie: series.map((p) => ({
+                        label: p.label,
+                        ano: p.ano,
+                        mes: p.mes,
+                        tpv: p.tpv,
+                        pctDoTotal: total > 0 ? (p.tpv / total) * 100 : 0,
+                      })),
+                    };
+                    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.download = `auditoria_tpv_${stamp}.json`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                  }}
+                  className="rounded-md border border-border/60 bg-background/40 px-2 py-1 text-white hover:bg-muted/30"
+                >
+                  ⬇ Exportar JSON
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => { await purgeClientCaches(); hardReload(); }}
+                  className="rounded-md border border-border/60 bg-background/40 px-2 py-1 text-white hover:bg-muted/30"
+                >
+                  Limpar cache e recarregar
+                </button>
+              </div>
             </div>
+
           </div>
         )}
       </div>
