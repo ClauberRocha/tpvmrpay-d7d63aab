@@ -84,12 +84,22 @@ export default function UsersPage() {
   const handleReset = async (id: string) => {
     try {
       const res = await callAdmin("reset_password", { id });
-      toast({
-        title: "Link de recuperação enviado",
-        description: res?.email ? `E-mail disparado para ${res.email}. Peça para verificar a caixa de entrada e o spam.` : undefined,
-      });
+      if (res?.action_link) {
+        try { await navigator.clipboard.writeText(res.action_link); } catch { /* ignore */ }
+      }
+      if (res?.emailed) {
+        toast({
+          title: "Link enviado por e-mail",
+          description: `E-mail disparado para ${res.email}. Link também copiado para a área de transferência.`,
+        });
+      } else {
+        toast({
+          title: "Limite de envio atingido — link copiado",
+          description: `O GoTrue bloqueou o envio automático (${res?.send_error ?? "rate limit"}). O link de recuperação foi copiado; envie manualmente para ${res?.email}.`,
+        });
+      }
     } catch (e) {
-      toast({ title: "Falha ao enviar reset", description: (e as Error).message, variant: "destructive" });
+      toast({ title: "Falha ao gerar reset", description: (e as Error).message, variant: "destructive" });
     }
   };
   const handleDelete = async (id: string) => {
