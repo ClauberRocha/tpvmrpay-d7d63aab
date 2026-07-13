@@ -118,11 +118,12 @@ export function TopClientes({ filtros }: { filtros: Filtros }) {
         <button
           onClick={handleExport}
           className="rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors inline-flex items-center gap-1.5 text-xs font-medium border border-border/60 bg-muted/20 px-2.5 py-1"
-          title="Exportar Excel"
+          title="Exportar para Excel"
         >
-          <Download className="h-3.5 w-3.5" />
-          <span>Exportar Completo</span>
+          <FileSpreadsheet className="h-3.5 w-3.5" />
+          <span>Exportar Excel</span>
         </button>
+
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-border/60">
