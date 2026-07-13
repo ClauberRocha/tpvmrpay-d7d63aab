@@ -63,11 +63,25 @@ export function isTpvLoaded() {
   return _loaded;
 }
 
+const CACHE_KEY = "mrpay:tpv-cache:v1";
+
 /** Fetches the private TPV dataset via the authenticated edge function. */
 export function loadTpvData(): Promise<void> {
   if (_loaded) return Promise.resolve();
   if (_loadPromise) return _loadPromise;
   _loadPromise = (async () => {
+    // Try in-session cache first for instant navigations after the first load.
+    try {
+      const cached = sessionStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached) as { tpv: TpvData; owners: Record<string, string> };
+        applyTpvData(parsed.tpv);
+        _owners = parsed.owners ?? {};
+        _loaded = true;
+        return;
+      }
+    } catch { /* ignore cache errors */ }
+
     const { data, error } = await supabase.functions.invoke<{
       tpv: TpvData;
       owners: Record<string, string>;
@@ -79,9 +93,11 @@ export function loadTpvData(): Promise<void> {
     applyTpvData(data.tpv);
     _owners = data.owners ?? {};
     _loaded = true;
+    try { sessionStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch { /* quota */ }
   })();
   return _loadPromise;
 }
+
 
 /** Test-only: inject dataset synchronously without hitting the network. */
 export function __setTpvDataForTests(data: TpvData, owners: Record<string, string> = {}) {
