@@ -27,6 +27,7 @@ export function AppRoutes() {
         <Route path={ROUTES.LOGIN} element={<Login />} />
         <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPassword />} />
         <Route path={ROUTES.SET_PASSWORD} element={<SetPassword />} />
+        <Route path="/reset-password" element={<SetPassword />} />
         <Route path={ROUTES.DASHBOARD} element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path={ROUTES.PROFILE} element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path={ROUTES.ADMIN_USERS} element={<ProtectedRoute requireRole="admin"><UsersPage /></ProtectedRoute>} />
