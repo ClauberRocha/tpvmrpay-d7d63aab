@@ -75,6 +75,9 @@ const Dashboard = () => {
   const [ready, setReady] = useState(isTpvLoaded());
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => { perfMark("dashboard_mount"); }, []);
+  useEffect(() => { if (ready) perfMark("dashboard_ready"); }, [ready]);
+
   useEffect(() => {
     if (ready) return;
     let cancelled = false;
@@ -83,6 +86,7 @@ const Dashboard = () => {
       .catch((e) => { if (!cancelled) setError((e as Error)?.message ?? "Falha ao carregar dados"); });
     return () => { cancelled = true; };
   }, [ready]);
+
 
   if (error) {
     return (
