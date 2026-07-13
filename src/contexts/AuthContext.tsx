@@ -22,6 +22,7 @@ interface AuthContextValue {
   role: AppRole | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
+  signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<{ error?: string; needsConfirmation?: boolean }>;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
   isAdmin: boolean;
@@ -156,6 +157,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return {};
   };
 
+  const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
+    const normalized = email.trim().toLowerCase();
+    if (!/@mrpay\.com\.br$/i.test(normalized)) {
+      return { error: "Somente e-mails @mrpay.com.br são permitidos." };
+    }
+    if (password.length < 8) {
+      return { error: "A senha deve ter pelo menos 8 caracteres." };
+    }
+    const { data, error } = await supabase.auth.signUp({
+      email: normalized,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/login`,
+        data: { first_name: firstName.trim(), last_name: lastName.trim() },
+      },
+    });
+    if (error) return { error: error.message };
+    return { needsConfirmation: !data.session };
+  };
+
   const signOut = async () => {
     await logAudit("logout", "Usuário fez logout");
     sessionStorage.removeItem(SESSION_KEY);
@@ -175,6 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role,
         loading,
         signIn,
+        signUp,
         signOut,
         refresh,
         isAdmin: role === "admin",
