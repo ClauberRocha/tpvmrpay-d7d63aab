@@ -5,13 +5,12 @@ import { useDashboard } from "../../hooks/useDashboard";
 
 import { getOwners, type Filtros } from "@/data/tpv";
 
-const ownersMap = getOwners();
-
 const MESES_LBL = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
 export function ClientesInativos({ filtros }: { filtros: Filtros }) {
   const { inativos } = useDashboard();
   const { rows, mesesSel, totalClientes } = inativos;
+  const ownersMap = getOwners();
 
   const periodoTxt = mesesSel.map((m) => MESES_LBL[m - 1]).join(", ");
   const totalmenteInativos = rows.filter((r) => r.faltas === mesesSel.length).length;
