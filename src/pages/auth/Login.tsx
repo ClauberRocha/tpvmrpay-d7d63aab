@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
+import mrpayLogo from "@/assets/mrpay-logo.png.asset.json";
+
 
 export default function Login() {
   const { signIn, session, loading } = useAuth();
@@ -34,7 +36,11 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-2xl">
         <div className="mb-6 text-center">
-          <div className="text-[#F9C730] font-bold uppercase tracking-[0.25em] text-sm mb-2">MR PAY</div>
+          <img
+            src={mrpayLogo.url}
+            alt="MR Pay"
+            className="mx-auto mb-4 h-14 w-auto"
+          />
           <h1 className="font-display text-2xl font-bold text-foreground">Acesso corporativo</h1>
           <p className="text-sm text-muted-foreground mt-1">Somente e-mails @mrpay.com.br</p>
         </div>
