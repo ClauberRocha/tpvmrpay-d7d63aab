@@ -1,6 +1,6 @@
 import { Loader2 } from "lucide-react";
 import { lazy, Suspense } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 
 import { ROUTES } from "@/constants/routes";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
@@ -24,6 +24,7 @@ export function AppRoutes() {
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
+        <Route path="/" element={<Navigate to={ROUTES.LOGIN} replace />} />
         <Route path={ROUTES.LOGIN} element={<Login />} />
         <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPassword />} />
         <Route path={ROUTES.SET_PASSWORD} element={<SetPassword />} />
