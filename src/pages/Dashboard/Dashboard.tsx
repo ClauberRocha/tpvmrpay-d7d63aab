@@ -113,6 +113,7 @@ const Dashboard = () => {
   return (
     <DashboardFilterProvider>
       <DashboardContent />
+      <PerfPanel />
     </DashboardFilterProvider>
   );
 };
