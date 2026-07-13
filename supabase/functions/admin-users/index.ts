@@ -188,18 +188,32 @@ Deno.serve(async (req) => {
 
       case "update": {
         const id = String(payload.id);
-        await admin.from("profiles").update({
-          first_name: payload.first_name,
-          last_name: payload.last_name,
-          department: payload.department,
-        }).eq("id", id);
+        const updates: Record<string, unknown> = {};
+        if (payload.first_name !== undefined) updates.first_name = payload.first_name;
+        if (payload.last_name !== undefined) updates.last_name = payload.last_name;
+        if (payload.department !== undefined) updates.department = payload.department;
+        if (payload.is_active !== undefined) updates.is_active = Boolean(payload.is_active);
+        if (Object.keys(updates).length > 0) {
+          await admin.from("profiles").update(updates).eq("id", id);
+        }
+        if (payload.is_active !== undefined) {
+          await admin.auth.admin.updateUserById(id, {
+            ban_duration: payload.is_active ? "none" : "876000h",
+          });
+        }
+        if (payload.role !== undefined && id !== caller.id) {
+          const role = String(payload.role);
+          if (!["admin", "manager", "user"].includes(role)) return json({ error: "invalid_role" }, 400);
+          await admin.from("user_roles").delete().eq("user_id", id);
+          await admin.from("user_roles").insert({ user_id: id, role });
+        }
         await admin.from("audit_logs").insert({
           user_id: caller.id, user_email: caller.email, user_role: "admin",
           action: "user_updated", description: `Editou perfil ${id}`,
+          metadata: updates as Record<string, unknown>,
         });
         return json({ ok: true });
       }
-
       case "set_role": {
         const id = String(payload.id);
         const role = String(payload.role);
