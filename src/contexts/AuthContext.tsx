@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode, useCallback 
 import type { Session, User } from "@supabase/supabase-js";
 
 import { supabase } from "@/integrations/supabase/client";
+import { loadTpvData } from "@/data/tpv";
 
 export type AppRole = "admin" | "manager" | "user";
 
@@ -81,6 +82,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(sess);
       if (sess?.user) {
         setTimeout(() => loadProfile(sess.user.id), 0);
+        // Prefetch dados protegidos em paralelo à navegação p/ dashboard.
+        void loadTpvData().catch(() => { /* dashboard exibirá erro se falhar */ });
       } else {
         setProfile(null);
         setRole(null);
@@ -90,6 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       if (data.session?.user) {
+        void loadTpvData().catch(() => {});
         loadProfile(data.session.user.id).finally(() => setLoading(false));
       } else {
         setLoading(false);
@@ -216,6 +220,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     await logAudit("logout", "Usuário fez logout");
     sessionStorage.removeItem(SESSION_KEY);
+    try { sessionStorage.removeItem("mrpay:tpv-cache:v1"); } catch { /* noop */ }
     await supabase.auth.signOut();
   };
 

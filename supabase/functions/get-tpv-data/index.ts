@@ -10,11 +10,27 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Expose-Headers": "content-encoding, content-length, etag",
 };
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+// Pre-serialize once at cold start — avoids re-stringifying ~850KB per request.
+const PAYLOAD_JSON = JSON.stringify({ tpv: tpvData, owners: ownersData });
+const PAYLOAD_BYTES = new TextEncoder().encode(PAYLOAD_JSON);
+
+// Pre-compress with gzip once — served to all clients that accept it.
+async function gzip(bytes: Uint8Array): Promise<Uint8Array> {
+  const cs = new CompressionStream("gzip");
+  const stream = new Response(new Blob([bytes]).stream().pipeThrough(cs));
+  return new Uint8Array(await (await stream.blob()).arrayBuffer());
+}
+const PAYLOAD_GZIP = await gzip(PAYLOAD_BYTES);
+
+// Weak ETag derived from payload length (content is static per deploy).
+const ETAG = `W/"tpv-${PAYLOAD_BYTES.length}"`;
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -46,5 +62,19 @@ Deno.serve(async (req) => {
   if (!profile?.is_active) return json({ error: "inactive" }, 403);
   if (!roles || roles.length === 0) return json({ error: "no_role" }, 403);
 
-  return json({ tpv: tpvData, owners: ownersData });
+  // Support ETag conditional requests for instant 304s.
+  if (req.headers.get("if-none-match") === ETAG) {
+    return new Response(null, { status: 304, headers: { ...corsHeaders, ETag: ETAG } });
+  }
+
+  const acceptsGzip = (req.headers.get("accept-encoding") ?? "").includes("gzip");
+  const body = acceptsGzip ? PAYLOAD_GZIP : PAYLOAD_BYTES;
+  const headers: Record<string, string> = {
+    ...corsHeaders,
+    "Content-Type": "application/json",
+    "Cache-Control": "private, max-age=300",
+    ETag: ETAG,
+  };
+  if (acceptsGzip) headers["Content-Encoding"] = "gzip";
+  return new Response(body, { status: 200, headers });
 });
