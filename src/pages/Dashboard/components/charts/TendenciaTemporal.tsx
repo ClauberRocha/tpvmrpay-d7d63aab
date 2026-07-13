@@ -4,19 +4,23 @@ import {
   Tooltip, XAxis, YAxis,
 } from "recharts";
 
-import { formatBRL, formatBRLCompact, MESES, monthlySeries, totalsFiltered, type Filtros } from "@/data/tpv";
+import { formatBRL, formatBRLCompact, formatNumber, MESES, monthlySeries, totalsFiltered, type Filtros } from "@/data/tpv";
+import { BUILD_ID, hardReload, purgeClientCaches } from "@/lib/buildInfo";
 
 export function TendenciaTemporal({ filtros }: { filtros: Filtros }) {
   const [ready, setReady] = useState(false);
+  const [auditOpen, setAuditOpen] = useState(false);
 
-  const { series, total, media, mismatch } = useMemo(() => {
+  const { series, total, media, mismatch, totalTx, periodoLabel } = useMemo(() => {
     const raw = monthlySeries(filtros);
     const s = raw.map((p) => ({
       label: `${MESES[p.mes - 1]}/${String(p.ano).slice(2)}`,
+      ano: p.ano,
+      mes: p.mes,
       tpv: p.tpv,
     }));
     const t = s.reduce((acc, p) => acc + p.tpv, 0);
-    const { tpv: totalRef } = totalsFiltered(filtros);
+    const { tpv: totalRef, tx } = totalsFiltered(filtros);
     const diff = t - totalRef;
     const isMismatch = Math.abs(diff) > 1;
     if (import.meta.env.DEV && isMismatch) {
@@ -24,11 +28,20 @@ export function TendenciaTemporal({ filtros }: { filtros: Filtros }) {
         `[TendenciaTemporal] Divergência: série=${t.toFixed(2)} vs total=${totalRef.toFixed(2)}`
       );
     }
+    const first = s[0];
+    const last = s[s.length - 1];
+    const periodo = s.length
+      ? s.length === 1
+        ? first.label
+        : `${first.label} → ${last.label} (${s.length} meses)`
+      : "Sem meses no período";
     return {
       series: s,
       total: t,
+      totalTx: tx,
       media: s.length ? t / s.length : 0,
       mismatch: isMismatch ? { serie: t, total: totalRef, diff } : null,
+      periodoLabel: periodo,
     };
   }, [filtros]);
 
@@ -50,6 +63,13 @@ export function TendenciaTemporal({ filtros }: { filtros: Filtros }) {
   const subtitulo = semFiltroSegUf
     ? "Captação mensal"
     : `Captação mensal · ${filtros.segmento !== "todos" ? filtros.segmento : filtros.uf}`;
+
+  const mesesLabel = filtros.meses.length === 0
+    ? "todos"
+    : filtros.meses.slice().sort((a, b) => a - b).map((m) => MESES[m - 1]).join(", ");
+  const anoLabel = filtros.ano === "todos" ? "todos" : String(filtros.ano);
+
+
 
   return (
     <div className="panel">
