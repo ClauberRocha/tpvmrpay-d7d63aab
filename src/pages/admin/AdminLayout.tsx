@@ -40,7 +40,7 @@ export function AdminLayout({ title, children }: { title: string; children: Reac
               <div className="font-medium">{profile?.first_name} {profile?.last_name}</div>
               <div className="text-muted-foreground">{role === "admin" ? "Administrador" : role === "manager" ? "Gestor" : "Usuário"}</div>
             </div>
-            <Button size="sm" variant="ghost" onClick={signOut}><LogOut className="h-4 w-4" /></Button>
+            <Button size="sm" variant="outline" onClick={signOut} className="gap-2"><LogOut className="h-4 w-4" /> Sair do sistema</Button>
           </div>
         </div>
       </header>
