@@ -24,6 +24,30 @@ function json(body: unknown, status = 200) {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+
+  // --- Bootstrap: convida admin inicial se ainda não houver nenhum admin ---
+  let bodyPeek: Body | null = null;
+  try { bodyPeek = await req.clone().json(); } catch { /* ignore */ }
+
+  if (bodyPeek?.action === "bootstrap_admin") {
+    const { count } = await admin.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "admin");
+    if ((count ?? 0) > 0) return json({ error: "already_bootstrapped" }, 403);
+    const email = "clauber.rocha@mrpay.com.br";
+    const { data: invited, error: invErr } = await admin.auth.admin.inviteUserByEmail(email, {
+      data: { first_name: "Clauber", last_name: "Rocha" },
+      redirectTo: `${bodyPeek.payload?.origin ?? ""}/set-password`,
+    });
+    if (invErr) return json({ error: invErr.message }, 500);
+    await admin.from("audit_logs").insert({
+      action: "admin_bootstrapped",
+      description: `Convite inicial enviado para ${email}`,
+      user_email: email,
+      user_role: "admin",
+    });
+    return json({ ok: true, user_id: invited.user?.id });
+  }
+
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) return json({ error: "missing_auth" }, 401);
 
