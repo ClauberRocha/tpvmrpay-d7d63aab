@@ -73,7 +73,7 @@ const DashboardContent = () => {
 
 const Dashboard = () => {
   const [ready, setReady] = useState(isTpvLoaded());
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ step: string; status: number; body: string } | null>(null);
 
   useEffect(() => { perfMark("dashboard_mount"); }, []);
   useEffect(() => { if (ready) perfMark("dashboard_ready"); }, [ready]);
@@ -83,17 +83,44 @@ const Dashboard = () => {
     let cancelled = false;
     loadTpvData()
       .then(() => { if (!cancelled) setReady(true); })
-      .catch((e) => { if (!cancelled) setError((e as Error)?.message ?? "Falha ao carregar dados"); });
+      .catch((e) => {
+        if (cancelled) return;
+        if (e instanceof TpvLoadError) {
+          setError({ step: e.step, status: e.status, body: e.body });
+        } else {
+          setError({ step: "unknown", status: 0, body: (e as Error)?.message ?? String(e) });
+        }
+      });
     return () => { cancelled = true; };
   }, [ready]);
 
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background px-6 text-center">
-        <div className="max-w-md space-y-2">
-          <p className="font-display text-lg font-semibold text-destructive">Não foi possível carregar os dados</p>
-          <p className="text-sm text-muted-foreground">{error}</p>
+      <div className="flex min-h-screen items-center justify-center bg-background px-6 py-10">
+        <div className="w-full max-w-2xl space-y-4 rounded-lg border border-destructive/40 bg-destructive/5 p-6">
+          <div>
+            <p className="font-display text-lg font-semibold text-destructive">Não foi possível carregar os dados</p>
+            <p className="text-sm text-muted-foreground">Detalhes abaixo para diagnóstico:</p>
+          </div>
+          <dl className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2 text-sm">
+            <dt className="font-medium text-muted-foreground">Etapa</dt>
+            <dd className="font-mono">{error.step}</dd>
+            <dt className="font-medium text-muted-foreground">Status</dt>
+            <dd className="font-mono">{error.status || "—"}</dd>
+          </dl>
+          <div>
+            <p className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Response body</p>
+            <pre className="max-h-64 overflow-auto rounded-md bg-background p-3 text-xs leading-relaxed">
+{error.body || "(vazio)"}
+            </pre>
+          </div>
+          <button
+            onClick={() => { setError(null); window.location.reload(); }}
+            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
+          >
+            Tentar novamente
+          </button>
         </div>
       </div>
     );
