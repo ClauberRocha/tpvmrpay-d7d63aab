@@ -36,21 +36,35 @@ Deno.serve(async (req) => {
   try { bodyPeek = await req.clone().json(); } catch { /* ignore */ }
 
   if (bodyPeek?.action === "bootstrap_admin") {
-    const { count } = await admin.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "admin");
-    if ((count ?? 0) > 0) return json({ error: "already_bootstrapped" }, 403);
     const email = "clauber.rocha@mrpay.com.br";
-    const { data: invited, error: invErr } = await admin.auth.admin.inviteUserByEmail(email, {
-      data: { first_name: "Clauber", last_name: "Rocha" },
-      redirectTo: `${bodyPeek.payload?.origin ?? ""}/set-password`,
+    const origin = String((bodyPeek.payload as Record<string, unknown> | undefined)?.origin ?? "");
+    // Se ainda não existir na auth, convida; senão apenas envia recovery
+    const { data: existing } = await admin.auth.admin.listUsers();
+    const found = existing.users.find((u) => u.email?.toLowerCase() === email);
+    if (!found) {
+      const { data: invited, error: invErr } = await admin.auth.admin.inviteUserByEmail(email, {
+        data: { first_name: "Clauber", last_name: "Rocha" },
+        redirectTo: `${origin}/set-password`,
+      });
+      if (invErr) return json({ error: invErr.message }, 500);
+      await admin.from("audit_logs").insert({
+        action: "admin_bootstrapped",
+        description: `Convite inicial enviado para ${email}`,
+        user_email: email, user_role: "admin",
+      });
+      return json({ ok: true, user_id: invited.user?.id, mode: "invited" });
+    }
+    // Já existe — envia recovery
+    const { error: resetErr } = await admin.auth.resetPasswordForEmail(email, {
+      redirectTo: `${origin}/set-password`,
     });
-    if (invErr) return json({ error: invErr.message }, 500);
+    if (resetErr) return json({ error: resetErr.message }, 500);
     await admin.from("audit_logs").insert({
       action: "admin_bootstrapped",
-      description: `Convite inicial enviado para ${email}`,
-      user_email: email,
-      user_role: "admin",
+      description: `Recovery link enviado para admin existente ${email}`,
+      user_email: email, user_role: "admin",
     });
-    return json({ ok: true, user_id: invited.user?.id });
+    return json({ ok: true, user_id: found.id, mode: "recovery" });
   }
 
   const authHeader = req.headers.get("Authorization");
