@@ -1,8 +1,21 @@
-import { Loader2, Download, Search } from "lucide-react";
+import { Loader2, Download, Search, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { exportToCsv } from "@/utils/exportCsv";
 import { AdminLayout } from "./AdminLayout";
@@ -16,16 +29,21 @@ interface Log {
 export default function AuditPage() {
   const [logs, setLogs] = useState<Log[]>([]);
   const [loading, setLoading] = useState(true);
+  const [clearing, setClearing] = useState(false);
   const [q, setQ] = useState("");
+  const { role } = useAuth();
+  const { toast } = useToast();
+  const isAdmin = role === "admin";
 
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase.from("audit_logs").select("*")
-        .order("created_at", { ascending: false }).limit(500);
-      setLogs((data as Log[]) ?? []);
-      setLoading(false);
-    })();
-  }, []);
+  const load = async () => {
+    setLoading(true);
+    const { data } = await supabase.from("audit_logs").select("*")
+      .order("created_at", { ascending: false }).limit(500);
+    setLogs((data as Log[]) ?? []);
+    setLoading(false);
+  };
+
+  useEffect(() => { void load(); }, []);
 
   const filtered = useMemo(() => {
     const s = q.toLowerCase();
@@ -42,6 +60,31 @@ export default function AuditPage() {
     );
   };
 
+  const clearLogs = async () => {
+    setClearing(true);
+    try {
+      const { error, count } = await supabase
+        .from("audit_logs")
+        .delete({ count: "exact" })
+        .not("id", "is", null);
+      if (error) throw error;
+      await supabase.rpc("log_audit", {
+        _action: "audit_logs_cleared",
+        _description: `Logs de auditoria apagados (${count ?? 0} registros)`,
+      });
+      toast({ title: "Logs apagados", description: `${count ?? 0} registros removidos.` });
+      await load();
+    } catch (e) {
+      toast({
+        title: "Erro ao apagar logs",
+        description: (e as Error).message,
+        variant: "destructive",
+      });
+    } finally {
+      setClearing(false);
+    }
+  };
+
   return (
     <AdminLayout title="Auditoria">
       <div className="flex gap-2 mb-4">
@@ -50,6 +93,30 @@ export default function AuditPage() {
           <Input placeholder="Pesquisar por usuário, ação, descrição..." className="pl-9" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
         <Button onClick={exportCsv} variant="outline" className="gap-2"><Download className="h-4 w-4" /> CSV</Button>
+        {isAdmin && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" className="gap-2" disabled={clearing || logs.length === 0}>
+                {clearing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                Limpar logs
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Apagar todos os logs de auditoria?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Esta ação é irreversível. Todos os {logs.length} registros de auditoria serão removidos permanentemente. Um novo registro será criado para documentar esta operação.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={() => void clearLogs()} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  Sim, apagar tudo
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
       </div>
       {loading ? (
         <div className="flex justify-center p-12"><Loader2 className="animate-spin" /></div>
