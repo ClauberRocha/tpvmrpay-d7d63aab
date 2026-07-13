@@ -1,4 +1,4 @@
-import { Loader2, Plus, KeyRound, Trash2, Power } from "lucide-react";
+import { Loader2, Plus, KeyRound, Trash2, Power, Pencil } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
