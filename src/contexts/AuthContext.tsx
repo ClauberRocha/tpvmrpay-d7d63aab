@@ -83,8 +83,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(sess);
       if (sess?.user) {
         setTimeout(() => loadProfile(sess.user.id), 0);
-        // Prefetch dados protegidos em paralelo à navegação p/ dashboard.
-        void loadTpvData().catch(() => { /* dashboard exibirá erro se falhar */ });
+        // Prefetch fora do callback: chamar supabase.* de forma síncrona aqui
+        // causa deadlock e o token não é anexado (edge fn responde 401).
+        setTimeout(() => { void loadTpvData().catch(() => {}); }, 0);
       } else {
         setProfile(null);
         setRole(null);
