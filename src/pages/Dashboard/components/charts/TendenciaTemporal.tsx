@@ -9,21 +9,27 @@ import { formatBRL, formatBRLCompact, MESES, monthlySeries, totalsFiltered, type
 export function TendenciaTemporal({ filtros }: { filtros: Filtros }) {
   const [ready, setReady] = useState(false);
 
-  const { series, total, media } = useMemo(() => {
+  const { series, total, media, mismatch } = useMemo(() => {
     const raw = monthlySeries(filtros);
     const s = raw.map((p) => ({
       label: `${MESES[p.mes - 1]}/${String(p.ano).slice(2)}`,
       tpv: p.tpv,
     }));
     const t = s.reduce((acc, p) => acc + p.tpv, 0);
-    // Verificação: soma da série mensal vs total filtrado
     const { tpv: totalRef } = totalsFiltered(filtros);
-    if (import.meta.env.DEV && Math.abs(t - totalRef) > 1) {
+    const diff = t - totalRef;
+    const isMismatch = Math.abs(diff) > 1;
+    if (import.meta.env.DEV && isMismatch) {
       console.warn(
         `[TendenciaTemporal] Divergência: série=${t.toFixed(2)} vs total=${totalRef.toFixed(2)}`
       );
     }
-    return { series: s, total: t, media: s.length ? t / s.length : 0 };
+    return {
+      series: s,
+      total: t,
+      media: s.length ? t / s.length : 0,
+      mismatch: isMismatch ? { serie: t, total: totalRef, diff } : null,
+    };
   }, [filtros]);
 
   useEffect(() => {
