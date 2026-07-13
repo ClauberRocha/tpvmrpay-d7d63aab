@@ -1,21 +1,36 @@
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, useState, useEffect } from "react";
 import {
   Area, AreaChart, CartesianGrid, ResponsiveContainer,
   Tooltip, XAxis, YAxis,
 } from "recharts";
 
-import { formatBRL, formatBRLCompact, MESES, monthlySeries, type Filtros } from "@/data/tpv";
+import { formatBRL, formatBRLCompact, MESES, monthlySeries, totalsFiltered, type Filtros } from "@/data/tpv";
 
 export function TendenciaTemporal({ filtros }: { filtros: Filtros }) {
-  const series = useMemo(() => {
-    return monthlySeries(filtros).map((p) => ({
+  const [ready, setReady] = useState(false);
+
+  const { series, total, media } = useMemo(() => {
+    const raw = monthlySeries(filtros);
+    const s = raw.map((p) => ({
       label: `${MESES[p.mes - 1]}/${String(p.ano).slice(2)}`,
       tpv: p.tpv,
     }));
+    const t = s.reduce((acc, p) => acc + p.tpv, 0);
+    // Verificação: soma da série mensal vs total filtrado
+    const { tpv: totalRef } = totalsFiltered(filtros);
+    if (import.meta.env.DEV && Math.abs(t - totalRef) > 1) {
+      console.warn(
+        `[TendenciaTemporal] Divergência: série=${t.toFixed(2)} vs total=${totalRef.toFixed(2)}`
+      );
+    }
+    return { series: s, total: t, media: s.length ? t / s.length : 0 };
   }, [filtros]);
 
-  const total = series.reduce((s, p) => s + p.tpv, 0);
-  const media = series.length ? total / series.length : 0;
+  useEffect(() => {
+    setReady(false);
+    const id = requestAnimationFrame(() => setReady(true));
+    return () => cancelAnimationFrame(id);
+  }, [filtros]);
 
   const tooltipFormatter = useCallback(
     (v: number) => {
@@ -49,40 +64,55 @@ export function TendenciaTemporal({ filtros }: { filtros: Filtros }) {
         </div>
       </div>
       <div className="h-[300px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={series} margin={{ top: 10, right: 8, left: -8, bottom: 0 }}>
-            <defs>
-              <linearGradient id="areaPrimary" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.6} />
-                <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 6" vertical={false} />
-            <XAxis dataKey="label" stroke="#ffffff" fontSize={11} tickLine={false} axisLine={false} tick={{ fill: "#ffffff" }} />
-            <YAxis stroke="#ffffff" fontSize={11} tickLine={false} axisLine={false} tick={{ fill: "#ffffff" }}
-              tickFormatter={formatBRLCompact} />
-            <Tooltip
-              contentStyle={{
-                background: "hsl(var(--popover))",
-                border: "1px solid hsl(var(--border))",
-                borderRadius: 12,
-                fontSize: 12,
-                color: "#ffffff",
-              }}
-              labelStyle={{ color: "#ffffff" }}
-              itemStyle={{ color: "#ffffff" }}
-              formatter={tooltipFormatter as any}
-            />
-            <Area
-              type="monotone"
-              dataKey="tpv"
-              stroke="hsl(var(--primary))"
-              strokeWidth={2.5}
-              fill="url(#areaPrimary)"
-              isAnimationActive={false}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+        {!ready ? (
+          <div className="flex h-full w-full flex-col justify-end gap-2 p-2" aria-busy="true" aria-label="Carregando gráfico">
+            <div className="flex h-full items-end gap-2">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex-1 animate-pulse rounded-t bg-muted/40"
+                  style={{ height: `${40 + ((i * 37) % 55)}%` }}
+                />
+              ))}
+            </div>
+            <div className="h-3 w-full animate-pulse rounded bg-muted/30" />
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={series} margin={{ top: 10, right: 8, left: -8, bottom: 0 }}>
+              <defs>
+                <linearGradient id="areaPrimary" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.6} />
+                  <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 6" vertical={false} />
+              <XAxis dataKey="label" stroke="#ffffff" fontSize={11} tickLine={false} axisLine={false} tick={{ fill: "#ffffff" }} />
+              <YAxis stroke="#ffffff" fontSize={11} tickLine={false} axisLine={false} tick={{ fill: "#ffffff" }}
+                tickFormatter={formatBRLCompact} />
+              <Tooltip
+                contentStyle={{
+                  background: "hsl(var(--popover))",
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: 12,
+                  fontSize: 12,
+                  color: "#ffffff",
+                }}
+                labelStyle={{ color: "#ffffff" }}
+                itemStyle={{ color: "#ffffff" }}
+                formatter={tooltipFormatter as any}
+              />
+              <Area
+                type="monotone"
+                dataKey="tpv"
+                stroke="hsl(var(--primary))"
+                strokeWidth={2.5}
+                fill="url(#areaPrimary)"
+                isAnimationActive={false}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        )}
       </div>
       {(() => {
         if (series.length < 2) {
