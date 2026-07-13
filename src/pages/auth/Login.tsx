@@ -121,14 +121,12 @@ export default function Login() {
             Entrar
           </Button>
 
-          <div className="flex items-center justify-between text-sm pt-1">
+          <div className="flex items-center justify-center text-sm pt-1">
             <Link to="/forgot-password" className="text-primary/90 hover:text-primary hover:underline">
               Esqueci minha senha
             </Link>
-            <Link to="/signup" className="text-muted-foreground hover:text-foreground hover:underline">
-              Criar conta
-            </Link>
           </div>
+
         </form>
 
         <div className="mt-8 pt-6 border-t border-border/60 flex items-center justify-center gap-2 text-xs text-muted-foreground">
