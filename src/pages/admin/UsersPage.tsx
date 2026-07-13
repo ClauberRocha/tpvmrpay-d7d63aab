@@ -149,11 +149,15 @@ export default function UsersPage() {
           {editing && (
             <EditUserForm
               user={editing}
-              onDone={() => { setEditing(null); void load(); }}
+              onDone={(updated) => {
+                if (updated) patchUser(updated.id, updated);
+                setEditing(null);
+              }}
             />
           )}
         </DialogContent>
       </Dialog>
+
     </AdminLayout>
   );
 }
