@@ -22,7 +22,7 @@ export default function ForgotPassword() {
     }
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(normalized, {
-      redirectTo: `${window.location.origin}/set-password`,
+      redirectTo: `${window.location.hostname.endsWith("lovable.app") && window.location.hostname !== "tpvmrpay.lovable.app" ? "https://tpvmrpay.lovable.app" : window.location.origin}/set-password`,
     });
     setLoading(false);
     if (error) setErr(error.message);
