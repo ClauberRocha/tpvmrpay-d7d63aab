@@ -3,10 +3,9 @@ import { AlertCircle } from "lucide-react";
 
 import { useDashboard } from "../../hooks/useDashboard";
 
-import owners from "@/data/clienteProprietario.json";
-import type { Filtros } from "@/data/tpv";
+import { getOwners, type Filtros } from "@/data/tpv";
 
-const ownersMap = owners as Record<string, string>;
+const ownersMap = getOwners();
 
 const MESES_LBL = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 

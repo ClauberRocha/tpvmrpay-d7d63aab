@@ -1,4 +1,4 @@
-import raw from "./tpv.json";
+import { supabase } from "@/integrations/supabase/client";
 
 export type Periodo = number | "todos";
 
@@ -21,15 +21,74 @@ export type TpvData = {
   clienteTs: TsRowK[];
 };
 
-const _rawTpv = raw as unknown as TpvData;
+// Mutable shared holder. Starts empty; consumers must ensure loadTpvData()
+// (or __setTpvDataForTests) has resolved before reading. The Dashboard route
+// gates rendering behind the loader so all sync consumers work as before.
+export const tpv: TpvData = {
+  meta: { anos: [], segmentos: [], ufs: [], mesesPorAno: {} },
+  totalTs: [],
+  segmentoTs: [],
+  categoriaTs: [],
+  proprietarioTs: [],
+  ufTs: [],
+  municipioTs: [],
+  clienteTs: [],
+};
 
-// Normaliza casing de segmentos (ex.: "CARTÓRIOS" vs "Cartórios") para que
-// meses gravados com grafias diferentes sejam agregados corretamente.
+let _owners: Record<string, string> = {};
+export function getOwners(): Record<string, string> {
+  return _owners;
+}
+
 const normSeg = (s: string) => (s ?? "").toLocaleUpperCase("pt-BR").trim();
-_rawTpv.segmentoTs = _rawTpv.segmentoTs.map((r) => ({ ...r, k: normSeg(r.k) }));
-_rawTpv.meta.segmentos = Array.from(new Set(_rawTpv.meta.segmentos.map(normSeg))).sort((a, b) => a.localeCompare(b, "pt-BR"));
 
-export const tpv = _rawTpv;
+function applyTpvData(data: TpvData) {
+  const normalized: TpvData = {
+    ...data,
+    segmentoTs: data.segmentoTs.map((r) => ({ ...r, k: normSeg(r.k) })),
+    meta: {
+      ...data.meta,
+      segmentos: Array.from(new Set((data.meta.segmentos ?? []).map(normSeg))).sort((a, b) =>
+        a.localeCompare(b, "pt-BR"),
+      ),
+    },
+  };
+  Object.assign(tpv, normalized);
+  _clienteCategoriaMap = null;
+}
+
+let _loadPromise: Promise<void> | null = null;
+let _loaded = false;
+export function isTpvLoaded() {
+  return _loaded;
+}
+
+/** Fetches the private TPV dataset via the authenticated edge function. */
+export function loadTpvData(): Promise<void> {
+  if (_loaded) return Promise.resolve();
+  if (_loadPromise) return _loadPromise;
+  _loadPromise = (async () => {
+    const { data, error } = await supabase.functions.invoke<{
+      tpv: TpvData;
+      owners: Record<string, string>;
+    }>("get-tpv-data", { method: "GET" });
+    if (error || !data) {
+      _loadPromise = null;
+      throw error ?? new Error("Falha ao carregar dados TPV");
+    }
+    applyTpvData(data.tpv);
+    _owners = data.owners ?? {};
+    _loaded = true;
+  })();
+  return _loadPromise;
+}
+
+/** Test-only: inject dataset synchronously without hitting the network. */
+export function __setTpvDataForTests(data: TpvData, owners: Record<string, string> = {}) {
+  applyTpvData(data);
+  _owners = owners;
+  _loaded = true;
+}
 
 export const MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
@@ -51,8 +110,8 @@ export const formatPct = (v: number) =>
 
 export type Filtros = {
   ano: Periodo;
-  meses: number[]; // [] = todos
-  segmento: string; // "todos" ou nome
+  meses: number[];
+  segmento: string;
   uf: string;
 };
 
@@ -61,9 +120,7 @@ const matchAno = (r: { ano: number }, ano: Periodo) =>
 const matchMes = (r: { mes: number }, meses: number[]) =>
   meses.length === 0 || meses.includes(r.mes);
 
-/** Soma TPV/tx do total filtrado (sem dimensão extra). */
 export function totalsFiltered(f: Filtros): { tpv: number; tx: number } {
-  // Quando há filtro de segmento ou uf, agregamos a partir dessas séries
   let rows: TsRowK[] | TsRow[];
   if (f.segmento !== "todos") {
     rows = tpv.segmentoTs.filter((r) => r.k === f.segmento);
@@ -82,7 +139,6 @@ export function totalsFiltered(f: Filtros): { tpv: number; tx: number } {
   return { tpv: tpvSum, tx };
 }
 
-/** Série mensal agregada após filtros. */
 export function monthlySeries(f: Filtros): { ano: number; mes: number; tpv: number }[] {
   let rows: { ano: number; mes: number; tpv: number }[];
   if (f.segmento !== "todos") {
@@ -107,7 +163,6 @@ export function monthlySeries(f: Filtros): { ano: number; mes: number; tpv: numb
     });
 }
 
-/** Ranking por dimensão depois dos filtros. */
 export function dimensionRanking(
   source: TsRowK[],
   f: Filtros,
@@ -116,17 +171,6 @@ export function dimensionRanking(
   const map = new Map<string, { tpv: number; tx: number }>();
   for (const r of source) {
     if (!matchAno(r, f.ano) || !matchMes(r, f.meses)) continue;
-    
-    // Filtros cruzados
-    if (f.segmento !== "todos") {
-      // Se a fonte for segmentoTs, já filtramos por r.k === f.segmento se quisermos, 
-      // mas dimensionRanking é usado para MOSTRAR os segmentos no ShareSegmento.
-      // ShareSegmento reseta o filtro de segmento para "todos" antes de chamar aqui.
-      // O problema é quando filtramos por UF e queremos ver o ranking de segmentos NAQUELA UF.
-      // Como os dados não são cruzados no JSON, buscamos a correspondência por cliente (cruzamento implícito via clienteTs)
-      // Mas para performance e simplicidade nos dados atuais, vamos assumir que source contém os dados da dimensão desejada.
-    }
-    
     if (extraFilter && !extraFilter(r.k)) continue;
     const cur = map.get(r.k) ?? { tpv: 0, tx: 0 };
     cur.tpv += r.tpv;
@@ -141,14 +185,12 @@ export function dimensionRanking(
 
 export type CategoriaCliente = "Diamante" | "Ouro" | "Prata" | "Bronze" | "TPV Zerado";
 
-/** Mapa cliente -> categoria, derivado do ranking global por TPV (todo o período). */
 let _clienteCategoriaMap: Map<string, CategoriaCliente> | null = null;
 export function getClienteCategoriaMap(): Map<string, CategoriaCliente> {
   if (_clienteCategoriaMap) return _clienteCategoriaMap;
   const totals = new Map<string, number>();
   for (const r of tpv.clienteTs) totals.set(r.k, (totals.get(r.k) ?? 0) + r.tpv);
   const sorted = Array.from(totals.entries()).sort((a, b) => b[1] - a[1]);
-  // Tamanhos derivados das somas de cada categoria nos dados (categoriaTs)
   const buckets: { name: CategoriaCliente; n: number }[] = [
     { name: "Diamante", n: 4 },
     { name: "Ouro", n: 16 },
