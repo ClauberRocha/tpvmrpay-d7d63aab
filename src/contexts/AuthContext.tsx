@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode, useCallback 
 import type { Session, User } from "@supabase/supabase-js";
 
 import { supabase } from "@/integrations/supabase/client";
+import { loadTpvData } from "@/data/tpv";
 
 export type AppRole = "admin" | "manager" | "user";
 
