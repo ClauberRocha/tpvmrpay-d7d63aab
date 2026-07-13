@@ -57,11 +57,11 @@ Deno.serve(async (req) => {
     if (rErr) console.log("user_roles error", rErr.message);
 
     if (!profile?.is_active) {
-      console.log("inactive or missing profile", userData.user.id);
+      console.log("inactive or missing profile", userId);
       return json({ error: "inactive" }, 403);
     }
     if (!roles || roles.length === 0) {
-      console.log("no role", userData.user.id);
+      console.log("no role", userId);
       return json({ error: "no_role" }, 403);
     }
 
