@@ -8,7 +8,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 const Dashboard = lazy(() => import("@/pages/Dashboard/Dashboard"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const Login = lazy(() => import("@/pages/auth/Login"));
-const SignUp = lazy(() => import("@/pages/auth/SignUp"));
+
 const ForgotPassword = lazy(() => import("@/pages/auth/ForgotPassword"));
 const SetPassword = lazy(() => import("@/pages/auth/SetPassword"));
 const UsersPage = lazy(() => import("@/pages/admin/UsersPage"));
