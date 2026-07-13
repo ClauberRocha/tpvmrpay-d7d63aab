@@ -6,6 +6,7 @@ import {
 
 import { formatBRL, formatBRLCompact, formatNumber, MESES, monthlySeries, totalsFiltered, type Filtros } from "@/data/tpv";
 import { BUILD_ID, hardReload, purgeClientCaches } from "@/lib/buildInfo";
+import { exportToCsv } from "@/utils/exportCsv";
 
 export function TendenciaTemporal({ filtros }: { filtros: Filtros }) {
   const [ready, setReady] = useState(false);
