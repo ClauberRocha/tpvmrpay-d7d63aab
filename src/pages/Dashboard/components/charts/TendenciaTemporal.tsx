@@ -69,6 +69,21 @@ export function TendenciaTemporal({ filtros }: { filtros: Filtros }) {
           </div>
         </div>
       </div>
+      {mismatch && (
+        <div
+          role="alert"
+          data-testid="tpv-mismatch-warning"
+          className="mb-3 flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-200"
+        >
+          <span aria-hidden className="mt-0.5">⚠️</span>
+          <div>
+            <div className="font-semibold">Divergência detectada na agregação</div>
+            <div className="text-amber-100/80">
+              Soma da série: {formatBRL(mismatch.serie)} · Total filtrado: {formatBRL(mismatch.total)} · Diferença: {formatBRL(mismatch.diff)}
+            </div>
+          </div>
+        </div>
+      )}
       <div className="h-[300px] w-full">
         {!ready ? (
           <div className="flex h-full w-full flex-col justify-end gap-2 p-2" aria-busy="true" aria-label="Carregando gráfico">
