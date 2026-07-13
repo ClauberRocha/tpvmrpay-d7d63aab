@@ -34,7 +34,7 @@ async function logAudit(action: string, description?: string, result: "success" 
   try {
     await supabase.rpc("log_audit", {
       _action: action,
-      _description: description ?? null,
+      _description: description ?? undefined,
       _result: result,
       _metadata: {
         user_agent: navigator.userAgent,
