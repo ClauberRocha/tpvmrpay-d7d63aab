@@ -88,9 +88,6 @@ export default function Login() {
             </Link>
           </div>
 
-          <Button asChild type="button" variant="outline" className="w-full">
-            <Link to="/signup">Criar nova conta</Link>
-          </Button>
         </form>
       </div>
     </div>
