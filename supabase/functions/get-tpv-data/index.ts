@@ -39,30 +39,29 @@ Deno.serve(async (req) => {
       return json({ error: "missing_auth" }, 401);
     }
 
-    const userClient = createClient(SUPABASE_URL, ANON, {
-      global: { headers: { Authorization: authHeader } },
-    });
-
-    const { data: userData, error: userErr } = await userClient.auth.getUser();
-    if (userErr || !userData.user) {
-      console.log("getUser failed", userErr?.message);
-      return json({ error: "unauthorized" }, 401);
+    const token = authHeader.replace(/^Bearer\s+/i, "");
+    const anonClient = createClient(SUPABASE_URL, ANON);
+    const { data: claimsData, error: claimsErr } = await anonClient.auth.getClaims(token);
+    if (claimsErr || !claimsData?.claims?.sub) {
+      console.log("getClaims failed", claimsErr?.message);
+      return json({ error: "unauthorized", detail: claimsErr?.message }, 401);
     }
+    const userId = claimsData.claims.sub as string;
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
     const [{ data: profile, error: pErr }, { data: roles, error: rErr }] = await Promise.all([
-      admin.from("profiles").select("is_active").eq("id", userData.user.id).maybeSingle(),
-      admin.from("user_roles").select("role").eq("user_id", userData.user.id),
+      admin.from("profiles").select("is_active").eq("id", userId).maybeSingle(),
+      admin.from("user_roles").select("role").eq("user_id", userId),
     ]);
     if (pErr) console.log("profiles error", pErr.message);
     if (rErr) console.log("user_roles error", rErr.message);
 
     if (!profile?.is_active) {
-      console.log("inactive or missing profile", userData.user.id);
+      console.log("inactive or missing profile", userId);
       return json({ error: "inactive" }, 403);
     }
     if (!roles || roles.length === 0) {
-      console.log("no role", userData.user.id);
+      console.log("no role", userId);
       return json({ error: "no_role" }, 403);
     }
 
