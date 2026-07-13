@@ -214,6 +214,7 @@ Deno.serve(async (req) => {
         });
         return json({ ok: true });
       }
+      case "set_role": {
         const id = String(payload.id);
         const role = String(payload.role);
         if (!["admin", "manager", "user"].includes(role)) return json({ error: "invalid_role" }, 400);
