@@ -6,7 +6,12 @@ import { defineConfig } from "vite";
 import { compression } from "vite-plugin-compression2";
 
 // https://vitejs.dev/config/
+const BUILD_ID = `${new Date().toISOString()}-${Math.random().toString(36).slice(2, 8)}`;
+
 export default defineConfig(({ mode }) => ({
+  define: {
+    __BUILD_ID__: JSON.stringify(BUILD_ID),
+  },
   server: {
     host: "::",
     port: 8080,
