@@ -82,6 +82,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(sess);
       if (sess?.user) {
         setTimeout(() => loadProfile(sess.user.id), 0);
+        // Prefetch dados protegidos em paralelo à navegação p/ dashboard.
+        void loadTpvData().catch(() => { /* dashboard exibirá erro se falhar */ });
       } else {
         setProfile(null);
         setRole(null);
@@ -91,6 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       if (data.session?.user) {
+        void loadTpvData().catch(() => {});
         loadProfile(data.session.user.id).finally(() => setLoading(false));
       } else {
         setLoading(false);
