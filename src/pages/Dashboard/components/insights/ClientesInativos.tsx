@@ -3,16 +3,14 @@ import { AlertCircle } from "lucide-react";
 
 import { useDashboard } from "../../hooks/useDashboard";
 
-import owners from "@/data/clienteProprietario.json";
-import type { Filtros } from "@/data/tpv";
-
-const ownersMap = owners as Record<string, string>;
+import { getOwners, type Filtros } from "@/data/tpv";
 
 const MESES_LBL = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
 export function ClientesInativos({ filtros }: { filtros: Filtros }) {
   const { inativos } = useDashboard();
   const { rows, mesesSel, totalClientes } = inativos;
+  const ownersMap = getOwners();
 
   const periodoTxt = mesesSel.map((m) => MESES_LBL[m - 1]).join(", ");
   const totalmenteInativos = rows.filter((r) => r.faltas === mesesSel.length).length;

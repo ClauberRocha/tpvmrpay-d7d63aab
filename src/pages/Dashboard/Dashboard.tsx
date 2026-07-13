@@ -1,5 +1,5 @@
-import { BarChart3, Building2, MapPin } from "lucide-react";
-import { useMemo } from "react";
+import { BarChart3, Building2, Loader2, MapPin } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Filtros } from "./components/filters/Filtros";
 import { DashboardCharts } from "./DashboardCharts";
@@ -10,7 +10,7 @@ import { DashboardKPIs } from "./DashboardKPIs";
 import { DashboardMaps } from "./DashboardMaps";
 
 import { ScrollToTopButton } from "@/components/ScrollToTopButton";
-import { dimensionRanking, tpv } from "@/data/tpv";
+import { dimensionRanking, isTpvLoaded, loadTpvData, tpv } from "@/data/tpv";
 
 const DashboardContent = () => {
   const {
@@ -26,7 +26,6 @@ const DashboardContent = () => {
       <div className="mx-auto max-w-[1600px] px-6 py-8 lg:px-10 lg:py-10">
         <DashboardHeader />
 
-        {/* Filtros */}
         <div className="mb-8">
           <Filtros
             ano={ano} setAno={setAno}
@@ -38,16 +37,9 @@ const DashboardContent = () => {
           />
         </div>
 
-        {/* KPIs */}
         <DashboardKPIs />
-
-        {/* Charts & Comparisons */}
         <DashboardCharts />
-
-        {/* Maps & Locations */}
         <DashboardMaps />
-
-        {/* Insights & Actions */}
         <DashboardInsights />
 
         <footer className="border-t border-border/40 pt-6 text-xs text-muted-foreground">
@@ -78,6 +70,40 @@ const DashboardContent = () => {
 };
 
 const Dashboard = () => {
+  const [ready, setReady] = useState(isTpvLoaded());
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (ready) return;
+    let cancelled = false;
+    loadTpvData()
+      .then(() => { if (!cancelled) setReady(true); })
+      .catch((e) => { if (!cancelled) setError((e as Error)?.message ?? "Falha ao carregar dados"); });
+    return () => { cancelled = true; };
+  }, [ready]);
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-6 text-center">
+        <div className="max-w-md space-y-2">
+          <p className="font-display text-lg font-semibold text-destructive">Não foi possível carregar os dados</p>
+          <p className="text-sm text-muted-foreground">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!ready) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background text-muted-foreground">
+        <div className="flex items-center gap-3 text-sm">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Carregando dados protegidos…
+        </div>
+      </div>
+    );
+  }
+
   return (
     <DashboardFilterProvider>
       <DashboardContent />
