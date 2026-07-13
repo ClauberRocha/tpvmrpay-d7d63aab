@@ -127,6 +127,7 @@ Deno.serve(async (req) => {
         if (!["admin", "manager", "user"].includes(role)) return json({ error: "invalid_role" }, 400);
 
         // Invite: Supabase envia e-mail com link para definir senha
+        let userId: string;
         const { data: invited, error: invErr } = await admin.auth.admin.inviteUserByEmail(email, {
           data: {
             first_name: payload.first_name ?? "",
@@ -134,9 +135,26 @@ Deno.serve(async (req) => {
           },
           redirectTo: `${payload.origin ?? ""}/set-password`,
         });
-        if (invErr) throw invErr;
 
-        const userId = invited.user!.id;
+        if (invErr) {
+          // Se o e-mail já existe, localiza o usuário e envia recovery
+          const code = (invErr as { code?: string }).code;
+          const msg = invErr.message || "";
+          if (code === "email_exists" || /already been registered/i.test(msg)) {
+            const { data: list, error: listErr } = await admin.auth.admin.listUsers();
+            if (listErr) throw listErr;
+            const existing = list.users.find((u) => u.email?.toLowerCase() === email);
+            if (!existing) return json({ error: "Usuário já existe mas não foi possível localizá-lo." }, 409);
+            userId = existing.id;
+            await admin.auth.resetPasswordForEmail(email, {
+              redirectTo: `${payload.origin ?? ""}/set-password`,
+            });
+          } else {
+            throw invErr;
+          }
+        } else {
+          userId = invited.user!.id;
+        }
 
         // Atualiza profile
         await admin.from("profiles").update({
