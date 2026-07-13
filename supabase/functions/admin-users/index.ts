@@ -1,7 +1,12 @@
 // Edge function para gerenciamento administrativo de usuários.
 // Só executa se o chamador for administrador. Usa service role internamente.
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
-import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -24,13 +29,50 @@ function json(body: unknown, status = 200) {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+
+  // --- Bootstrap: convida admin inicial se ainda não houver nenhum admin ---
+  let bodyPeek: Body | null = null;
+  try { bodyPeek = await req.clone().json(); } catch { /* ignore */ }
+
+  if (bodyPeek?.action === "bootstrap_admin") {
+    const email = "clauber.rocha@mrpay.com.br";
+    const origin = String((bodyPeek.payload as Record<string, unknown> | undefined)?.origin ?? "");
+    // Se ainda não existir na auth, convida; senão apenas envia recovery
+    const { data: existing } = await admin.auth.admin.listUsers();
+    const found = existing.users.find((u) => u.email?.toLowerCase() === email);
+    if (!found) {
+      const { data: invited, error: invErr } = await admin.auth.admin.inviteUserByEmail(email, {
+        data: { first_name: "Clauber", last_name: "Rocha" },
+        redirectTo: `${origin}/set-password`,
+      });
+      if (invErr) return json({ error: invErr.message }, 500);
+      await admin.from("audit_logs").insert({
+        action: "admin_bootstrapped",
+        description: `Convite inicial enviado para ${email}`,
+        user_email: email, user_role: "admin",
+      });
+      return json({ ok: true, user_id: invited.user?.id, mode: "invited" });
+    }
+    // Já existe — envia recovery
+    const { error: resetErr } = await admin.auth.resetPasswordForEmail(email, {
+      redirectTo: `${origin}/set-password`,
+    });
+    if (resetErr) return json({ error: resetErr.message }, 500);
+    await admin.from("audit_logs").insert({
+      action: "admin_bootstrapped",
+      description: `Recovery link enviado para admin existente ${email}`,
+      user_email: email, user_role: "admin",
+    });
+    return json({ ok: true, user_id: found.id, mode: "recovery" });
+  }
+
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) return json({ error: "missing_auth" }, 401);
 
   const userClient = createClient(SUPABASE_URL, ANON, {
     global: { headers: { Authorization: authHeader } },
   });
-  const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
   const { data: userData, error: userErr } = await userClient.auth.getUser();
   if (userErr || !userData.user) return json({ error: "unauthorized" }, 401);
