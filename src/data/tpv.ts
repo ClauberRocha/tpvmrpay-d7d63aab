@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { perfMark } from "@/lib/perfMetrics";
 
 export type Periodo = number | "todos";
 
@@ -78,14 +79,17 @@ export function loadTpvData(): Promise<void> {
         applyTpvData(parsed.tpv);
         _owners = parsed.owners ?? {};
         _loaded = true;
+        perfMark("tpv_cache_hit");
         return;
       }
     } catch { /* ignore cache errors */ }
 
+    perfMark("tpv_fetch_start");
     const { data, error } = await supabase.functions.invoke<{
       tpv: TpvData;
       owners: Record<string, string>;
     }>("get-tpv-data", { method: "GET" });
+    perfMark("tpv_fetch_end");
     if (error || !data) {
       _loadPromise = null;
       throw error ?? new Error("Falha ao carregar dados TPV");
@@ -97,6 +101,7 @@ export function loadTpvData(): Promise<void> {
   })();
   return _loadPromise;
 }
+
 
 
 /** Test-only: inject dataset synchronously without hitting the network. */

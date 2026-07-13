@@ -3,6 +3,7 @@ import type { Session, User } from "@supabase/supabase-js";
 
 import { supabase } from "@/integrations/supabase/client";
 import { loadTpvData } from "@/data/tpv";
+import { perfMark } from "@/lib/perfMetrics";
 
 export type AppRole = "admin" | "manager" | "user";
 
@@ -191,6 +192,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     // Nova sessão de auditoria
     sessionStorage.removeItem(SESSION_KEY);
+    perfMark("login_auth_ok");
     await supabase.rpc("record_login_attempt", { _email: normalized, _success: true, _user_agent: navigator.userAgent });
     await logAudit("login_success", `Login OK: ${normalized}`);
     return {};

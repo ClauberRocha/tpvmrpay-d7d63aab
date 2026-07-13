@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
+import { perfMark, perfReset } from "@/lib/perfMetrics";
 import mrpayLogo from "@/assets/mrpay-logo.png";
 
 export default function Login() {
@@ -26,10 +27,13 @@ export default function Login() {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
+    perfReset();
+    perfMark("login_submit");
     const { error: err } = await signIn(email, password);
     setSubmitting(false);
     if (err) setError(err);
   };
+
 
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-background px-4 py-10 overflow-hidden">

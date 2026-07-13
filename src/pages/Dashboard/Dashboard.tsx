@@ -9,8 +9,10 @@ import { DashboardInsights } from "./DashboardInsights";
 import { DashboardKPIs } from "./DashboardKPIs";
 import { DashboardMaps } from "./DashboardMaps";
 
+import { PerfPanel } from "@/components/PerfPanel";
 import { ScrollToTopButton } from "@/components/ScrollToTopButton";
 import { dimensionRanking, isTpvLoaded, loadTpvData, tpv } from "@/data/tpv";
+import { perfMark } from "@/lib/perfMetrics";
 
 const DashboardContent = () => {
   const {
@@ -73,6 +75,9 @@ const Dashboard = () => {
   const [ready, setReady] = useState(isTpvLoaded());
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => { perfMark("dashboard_mount"); }, []);
+  useEffect(() => { if (ready) perfMark("dashboard_ready"); }, [ready]);
+
   useEffect(() => {
     if (ready) return;
     let cancelled = false;
@@ -81,6 +86,7 @@ const Dashboard = () => {
       .catch((e) => { if (!cancelled) setError((e as Error)?.message ?? "Falha ao carregar dados"); });
     return () => { cancelled = true; };
   }, [ready]);
+
 
   if (error) {
     return (
@@ -107,6 +113,7 @@ const Dashboard = () => {
   return (
     <DashboardFilterProvider>
       <DashboardContent />
+      <PerfPanel />
     </DashboardFilterProvider>
   );
 };
