@@ -43,13 +43,27 @@ export default function UsersPage() {
 
   useEffect(() => { void load(); }, []);
 
+  const patchUser = (id: string, patch: Partial<UserRow>) =>
+    setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, ...patch } : u)));
+  const removeUser = (id: string) =>
+    setUsers((prev) => prev.filter((u) => u.id !== id));
+
   const handleRoleChange = async (id: string, role: string) => {
-    try { await callAdmin("set_role", { id, role }); toast({ title: "Perfil atualizado" }); await load(); }
-    catch (e) { toast({ title: "Erro", description: (e as Error).message, variant: "destructive" }); }
+    const prev = users.find((u) => u.id === id)?.role;
+    patchUser(id, { role: role as UserRow["role"] });
+    try { await callAdmin("set_role", { id, role }); toast({ title: "Perfil atualizado" }); }
+    catch (e) {
+      if (prev) patchUser(id, { role: prev });
+      toast({ title: "Erro", description: (e as Error).message, variant: "destructive" });
+    }
   };
   const handleToggleActive = async (u: UserRow) => {
-    try { await callAdmin("set_active", { id: u.id, is_active: !u.is_active }); await load(); }
-    catch (e) { toast({ title: "Erro", description: (e as Error).message, variant: "destructive" }); }
+    patchUser(u.id, { is_active: !u.is_active });
+    try { await callAdmin("set_active", { id: u.id, is_active: !u.is_active }); }
+    catch (e) {
+      patchUser(u.id, { is_active: u.is_active });
+      toast({ title: "Erro", description: (e as Error).message, variant: "destructive" });
+    }
   };
   const handleReset = async (id: string) => {
     try { await callAdmin("reset_password", { id }); toast({ title: "Link enviado" }); }
@@ -57,9 +71,15 @@ export default function UsersPage() {
   };
   const handleDelete = async (id: string) => {
     if (!confirm("Excluir usuário permanentemente?")) return;
-    try { await callAdmin("delete", { id }); toast({ title: "Usuário excluído" }); await load(); }
-    catch (e) { toast({ title: "Erro", description: (e as Error).message, variant: "destructive" }); }
+    const snapshot = users;
+    removeUser(id);
+    try { await callAdmin("delete", { id }); toast({ title: "Usuário excluído" }); }
+    catch (e) {
+      setUsers(snapshot);
+      toast({ title: "Erro", description: (e as Error).message, variant: "destructive" });
+    }
   };
+
 
   return (
     <AdminLayout title="Usuários">
@@ -129,16 +149,20 @@ export default function UsersPage() {
           {editing && (
             <EditUserForm
               user={editing}
-              onDone={() => { setEditing(null); void load(); }}
+              onDone={(updated) => {
+                if (updated) patchUser(updated.id, updated);
+                setEditing(null);
+              }}
             />
           )}
         </DialogContent>
       </Dialog>
+
     </AdminLayout>
   );
 }
 
-function EditUserForm({ user, onDone }: { user: UserRow; onDone: () => void }) {
+function EditUserForm({ user, onDone }: { user: UserRow; onDone: (updated?: UserRow) => void }) {
   const [form, setForm] = useState({
     first_name: user.first_name ?? "",
     last_name: user.last_name ?? "",
@@ -156,7 +180,8 @@ function EditUserForm({ user, onDone }: { user: UserRow; onDone: () => void }) {
     try {
       await callAdmin("update", { id: user.id, ...form });
       toast({ title: "Usuário atualizado" });
-      onDone();
+      onDone({ ...user, ...form });
+
     } catch (e) { setErr((e as Error).message); }
     finally { setLoading(false); }
   };
