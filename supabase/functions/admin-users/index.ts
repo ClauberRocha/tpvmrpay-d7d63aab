@@ -139,33 +139,40 @@ Deno.serve(async (req) => {
 
       case "create": {
         const email = String(payload.email ?? "").toLowerCase().trim();
-        if (!EMAIL_DOMAIN.test(email)) return json({ error: "invalid_domain" }, 400);
+        console.log("[create] start", { email, role: payload.role });
+        if (!EMAIL_DOMAIN.test(email)) {
+          console.log("[create] invalid_domain", email);
+          return json({ error: "invalid_domain" }, 400);
+        }
         const role = String(payload.role ?? "user");
-        if (!["admin", "manager", "user"].includes(role)) return json({ error: "invalid_role" }, 400);
+        if (!["admin", "manager", "user"].includes(role)) {
+          console.log("[create] invalid_role", role);
+          return json({ error: "invalid_role" }, 400);
+        }
 
-        // Invite: Supabase envia e-mail com link para definir senha
         let userId: string;
+        let mode: "invited" | "recovery" = "invited";
         const { data: invited, error: invErr } = await admin.auth.admin.inviteUserByEmail(email, {
-          data: {
-            first_name: payload.first_name ?? "",
-            last_name: payload.last_name ?? "",
-          },
+          data: { first_name: payload.first_name ?? "", last_name: payload.last_name ?? "" },
           redirectTo: `${payload.origin ?? ""}/set-password`,
         });
+        console.log("[create] invite result:", { ok: !invErr, id: invited?.user?.id, err: invErr?.message, code: (invErr as { code?: string })?.code });
 
         if (invErr) {
-          // Se o e-mail já existe, localiza o usuário e envia recovery
           const code = (invErr as { code?: string }).code;
           const msg = invErr.message || "";
           if (code === "email_exists" || /already been registered/i.test(msg)) {
+            mode = "recovery";
             const { data: list, error: listErr } = await admin.auth.admin.listUsers();
-            if (listErr) throw listErr;
+            if (listErr) { console.log("[create] listUsers err", listErr.message); throw listErr; }
             const existing = list.users.find((u) => u.email?.toLowerCase() === email);
             if (!existing) return json({ error: "Usuário já existe mas não foi possível localizá-lo." }, 409);
             userId = existing.id;
-            await admin.auth.resetPasswordForEmail(email, {
+            console.log("[create] user exists in auth:", userId);
+            const { error: recErr } = await admin.auth.resetPasswordForEmail(email, {
               redirectTo: `${payload.origin ?? ""}/set-password`,
             });
+            console.log("[create] recovery email:", { err: recErr?.message });
           } else {
             throw invErr;
           }
@@ -173,24 +180,32 @@ Deno.serve(async (req) => {
           userId = invited.user!.id;
         }
 
-        // Atualiza profile
-        await admin.from("profiles").update({
+        // UPSERT do profile — o trigger handle_new_user pode não ter rodado
+        // para usuários antigos, e UPDATE puro é no-op quando a linha não existe.
+        const { error: upErr } = await admin.from("profiles").upsert({
+          id: userId,
+          email,
           first_name: payload.first_name ?? "",
           last_name: payload.last_name ?? "",
           department: payload.department ?? "",
           is_active: payload.is_active ?? true,
           must_change_password: true,
-        }).eq("id", userId);
+        }, { onConflict: "id" });
+        console.log("[create] profile upsert:", { err: upErr?.message });
+        if (upErr) throw upErr;
 
-        // Define role: remove padrão e insere pedido
-        await admin.from("user_roles").delete().eq("user_id", userId);
-        await admin.from("user_roles").insert({ user_id: userId, role });
+        const { error: delRoleErr } = await admin.from("user_roles").delete().eq("user_id", userId);
+        const { error: insRoleErr } = await admin.from("user_roles").insert({ user_id: userId, role });
+        console.log("[create] role set:", { role, delErr: delRoleErr?.message, insErr: insRoleErr?.message });
+        if (insRoleErr) throw insRoleErr;
 
         await admin.from("audit_logs").insert({
           user_id: caller.id, user_email: caller.email, user_role: "admin",
-          action: "user_created", description: `Convidou ${email} como ${role}`,
+          action: "user_created", description: `${mode === "recovery" ? "Recuperou" : "Convidou"} ${email} como ${role}`,
+          metadata: { mode, target_user_id: userId },
         });
-        return json({ ok: true, user_id: userId });
+        console.log("[create] done", { userId, mode });
+        return json({ ok: true, user_id: userId, mode });
       }
 
       case "update": {
