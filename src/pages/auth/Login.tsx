@@ -1,4 +1,4 @@
-import { Eye, EyeOff, Loader2, LogIn, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, Info, Loader2, LogIn, ShieldCheck } from "lucide-react";
 import { FormEvent, useState } from "react";
 import { Link, Navigate, useLocation } from "react-router-dom";
 
@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { perfMark, perfReset } from "@/lib/perfMetrics";
 import mrpayLogo from "@/assets/mrpay-logo.png";
+
 
 export default function Login() {
   const { signIn, session, loading } = useAuth();
@@ -128,6 +129,27 @@ export default function Login() {
           </div>
 
         </form>
+
+        <div className="mt-6 rounded-lg border border-primary/25 bg-primary/5 p-3 text-xs text-muted-foreground">
+          <div className="flex items-start gap-2">
+            <Info className="h-4 w-4 mt-0.5 text-primary shrink-0" />
+            <div className="space-y-1.5">
+              <p className="font-semibold text-foreground">Primeiro acesso ou esqueceu a senha?</p>
+              <p>
+                Acesse sempre por <span className="font-mono text-foreground">tpvmrpay.lovable.app</span>.
+                Não é necessário criar conta na Lovable.
+              </p>
+              <p>
+                Clique em <strong>“Esqueci minha senha”</strong> abaixo e informe seu e-mail
+                <span className="font-mono"> @mrpay.com.br</span>. Você receberá um link seguro para definir uma nova senha.
+              </p>
+              <p>
+                No primeiro login, o sistema pedirá automaticamente para você trocar a senha temporária.
+              </p>
+            </div>
+          </div>
+        </div>
+
 
         <div className="mt-8 pt-6 border-t border-border/60 flex items-center justify-center gap-2 text-xs text-muted-foreground">
           <ShieldCheck className="h-3.5 w-3.5 text-primary" />
