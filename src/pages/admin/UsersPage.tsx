@@ -16,9 +16,25 @@ interface UserRow {
   role: "admin" | "manager" | "user";
 }
 
+// URL pública do app — links de e-mail (convite/recuperação) devem apontar
+// sempre para o app publicado, nunca para o preview do editor (que exige
+// login na Lovable e mostra a tela do editor em vez do login do sistema).
+const PUBLIC_APP_URL = "https://tpvmrpay.lovable.app";
+
+function appOrigin(): string {
+  if (typeof window === "undefined") return PUBLIC_APP_URL;
+  const host = window.location.hostname;
+  // Qualquer host lovable.app que não seja o domínio publicado cai no preview
+  // do editor — força o domínio público.
+  if (host.endsWith("lovable.app") && host !== "tpvmrpay.lovable.app") {
+    return PUBLIC_APP_URL;
+  }
+  return window.location.origin;
+}
+
 async function callAdmin(action: string, payload: Record<string, unknown> = {}) {
   const { data, error } = await supabase.functions.invoke("admin-users", {
-    body: { action, payload: { ...payload, origin: window.location.origin } },
+    body: { action, payload: { ...payload, origin: appOrigin() } },
   });
   if (error) throw new Error(error.message);
   if (data?.error) throw new Error(data.error);
