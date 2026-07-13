@@ -9,21 +9,27 @@ import { formatBRL, formatBRLCompact, MESES, monthlySeries, totalsFiltered, type
 export function TendenciaTemporal({ filtros }: { filtros: Filtros }) {
   const [ready, setReady] = useState(false);
 
-  const { series, total, media } = useMemo(() => {
+  const { series, total, media, mismatch } = useMemo(() => {
     const raw = monthlySeries(filtros);
     const s = raw.map((p) => ({
       label: `${MESES[p.mes - 1]}/${String(p.ano).slice(2)}`,
       tpv: p.tpv,
     }));
     const t = s.reduce((acc, p) => acc + p.tpv, 0);
-    // Verificação: soma da série mensal vs total filtrado
     const { tpv: totalRef } = totalsFiltered(filtros);
-    if (import.meta.env.DEV && Math.abs(t - totalRef) > 1) {
+    const diff = t - totalRef;
+    const isMismatch = Math.abs(diff) > 1;
+    if (import.meta.env.DEV && isMismatch) {
       console.warn(
         `[TendenciaTemporal] Divergência: série=${t.toFixed(2)} vs total=${totalRef.toFixed(2)}`
       );
     }
-    return { series: s, total: t, media: s.length ? t / s.length : 0 };
+    return {
+      series: s,
+      total: t,
+      media: s.length ? t / s.length : 0,
+      mismatch: isMismatch ? { serie: t, total: totalRef, diff } : null,
+    };
   }, [filtros]);
 
   useEffect(() => {
@@ -63,6 +69,21 @@ export function TendenciaTemporal({ filtros }: { filtros: Filtros }) {
           </div>
         </div>
       </div>
+      {mismatch && (
+        <div
+          role="alert"
+          data-testid="tpv-mismatch-warning"
+          className="mb-3 flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-200"
+        >
+          <span aria-hidden className="mt-0.5">⚠️</span>
+          <div>
+            <div className="font-semibold">Divergência detectada na agregação</div>
+            <div className="text-amber-100/80">
+              Soma da série: {formatBRL(mismatch.serie)} · Total filtrado: {formatBRL(mismatch.total)} · Diferença: {formatBRL(mismatch.diff)}
+            </div>
+          </div>
+        </div>
+      )}
       <div className="h-[300px] w-full">
         {!ready ? (
           <div className="flex h-full w-full flex-col justify-end gap-2 p-2" aria-busy="true" aria-label="Carregando gráfico">
