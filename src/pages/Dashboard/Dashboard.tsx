@@ -9,8 +9,10 @@ import { DashboardInsights } from "./DashboardInsights";
 import { DashboardKPIs } from "./DashboardKPIs";
 import { DashboardMaps } from "./DashboardMaps";
 
+import { PerfPanel } from "@/components/PerfPanel";
 import { ScrollToTopButton } from "@/components/ScrollToTopButton";
 import { dimensionRanking, isTpvLoaded, loadTpvData, tpv } from "@/data/tpv";
+import { perfMark } from "@/lib/perfMetrics";
 
 const DashboardContent = () => {
   const {
