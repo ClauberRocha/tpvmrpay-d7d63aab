@@ -85,21 +85,49 @@ export function loadTpvData(): Promise<void> {
     } catch { /* ignore cache errors */ }
 
     perfMark("tpv_fetch_start");
-    const { data, error } = await supabase.functions.invoke<{
-      tpv: TpvData;
-      owners: Record<string, string>;
-    }>("get-tpv-data", { method: "GET" });
-    perfMark("tpv_fetch_end");
-    if (error || !data) {
+    let step: "session" | "fetch" | "parse" | "apply" = "session";
+    try {
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess.session?.access_token;
+      if (!token) throw new TpvLoadError("session", 0, "Sem sessão ativa (access_token ausente)");
+
+      step = "fetch";
+      const url = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/get-tpv-data`;
+      const res = await fetch(url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string,
+        },
+      });
+      perfMark("tpv_fetch_end");
+      if (!res.ok) {
+        const body = await res.text().catch(() => "");
+        throw new TpvLoadError("fetch", res.status, body || res.statusText);
+      }
+
+      step = "parse";
+      const payload = (await res.json()) as { tpv: TpvData; owners: Record<string, string> };
+
+      step = "apply";
+      applyTpvData(payload.tpv);
+      _owners = payload.owners ?? {};
+      _loaded = true;
+      try { sessionStorage.setItem(CACHE_KEY, JSON.stringify(payload)); } catch { /* quota */ }
+    } catch (e) {
       _loadPromise = null;
-      throw error ?? new Error("Falha ao carregar dados TPV");
+      if (e instanceof TpvLoadError) throw e;
+      throw new TpvLoadError(step, 0, (e as Error)?.message ?? String(e));
     }
-    applyTpvData(data.tpv);
-    _owners = data.owners ?? {};
-    _loaded = true;
-    try { sessionStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch { /* quota */ }
   })();
   return _loadPromise;
+}
+
+export class TpvLoadError extends Error {
+  constructor(public step: string, public status: number, public body: string) {
+    super(`[${step}${status ? ` ${status}` : ""}] ${body}`);
+    this.name = "TpvLoadError";
+  }
 }
 
 
