@@ -30,6 +30,17 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+const SESSION_KEY = "mrpay:audit_session_id";
+
+function getSessionId(): string {
+  let id = sessionStorage.getItem(SESSION_KEY);
+  if (!id) {
+    id = crypto.randomUUID();
+    sessionStorage.setItem(SESSION_KEY, id);
+  }
+  return id;
+}
+
 async function logAudit(action: string, description?: string, result: "success" | "failure" = "success") {
   try {
     await supabase.rpc("log_audit", {
@@ -40,6 +51,7 @@ async function logAudit(action: string, description?: string, result: "success" 
         user_agent: navigator.userAgent,
         platform: navigator.platform,
       },
+      _session_id: getSessionId(),
     });
   } catch (e) {
     console.warn("audit failed", e);
@@ -113,8 +125,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await logAudit("login_failed", `Domínio inválido: ${normalized}`, "failure");
       return { error: "Somente e-mails @mrpay.com.br são permitidos." };
     }
+
+    // Bloqueio por tentativas
+    const { data: gate } = await supabase.rpc("check_login_allowed", { _email: normalized });
+    const gateRow = Array.isArray(gate) ? gate[0] : gate;
+    if (gateRow && !gateRow.allowed) {
+      const mins = Math.ceil((gateRow.remaining_seconds ?? 0) / 60);
+      await logAudit("login_blocked", `${normalized} bloqueado por excesso de tentativas`, "failure");
+      return { error: `Muitas tentativas malsucedidas. Tente novamente em ${mins} minuto(s).` };
+    }
+
     const { error, data } = await supabase.auth.signInWithPassword({ email: normalized, password });
     if (error) {
+      await supabase.rpc("record_login_attempt", { _email: normalized, _success: false, _user_agent: navigator.userAgent });
       await logAudit("login_failed", `Falha em ${normalized}: ${error.message}`, "failure");
       return { error: error.message };
     }
@@ -126,12 +149,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error: "Conta desativada. Contate o administrador." };
       }
     }
+    // Nova sessão de auditoria
+    sessionStorage.removeItem(SESSION_KEY);
+    await supabase.rpc("record_login_attempt", { _email: normalized, _success: true, _user_agent: navigator.userAgent });
     await logAudit("login_success", `Login OK: ${normalized}`);
     return {};
   };
 
   const signOut = async () => {
     await logAudit("logout", "Usuário fez logout");
+    sessionStorage.removeItem(SESSION_KEY);
     await supabase.auth.signOut();
   };
 
