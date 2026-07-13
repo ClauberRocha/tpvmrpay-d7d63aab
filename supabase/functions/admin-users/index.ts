@@ -269,42 +269,43 @@ Deno.serve(async (req) => {
       case "reset_password": {
         const id = String(payload.id);
         const origin = String(payload.origin ?? "");
-        console.log("[reset_password] start", { id, origin });
         const { data: prof, error: profErr } = await admin
           .from("profiles").select("email").eq("id", id).single();
-        if (profErr || !prof) {
-          console.log("[reset_password] profile not found", profErr?.message);
-          return json({ error: "not_found" }, 404);
-        }
-        console.log("[reset_password] target email", prof.email);
+        if (profErr || !prof) return json({ error: "not_found" }, 404);
+        console.log("[reset_password] target", prof.email);
 
-        // O envio efetivo do e-mail passa pelo fluxo público do GoTrue.
-        // Chamar com o service_role NÃO dispara e-mail — precisa ser via anon.
+        // Tenta enviar via fluxo público (dispara e-mail automaticamente).
         const anon = createClient(SUPABASE_URL, ANON);
         const { error: sendErr } = await anon.auth.resetPasswordForEmail(prof.email, {
           redirectTo: `${origin}/set-password`,
         });
-        console.log("[reset_password] send result:", {
-          err: sendErr?.message,
-          code: (sendErr as { code?: string })?.code,
-          status: (sendErr as { status?: number })?.status,
-        });
-        if (sendErr) {
-          await admin.from("audit_logs").insert({
-            user_id: caller.id, user_email: caller.email, user_role: "admin",
-            action: "password_reset_failed", result: "failure",
-            description: `Falha ao enviar reset para ${prof.email}: ${sendErr.message}`,
-          });
-          return json({ error: sendErr.message }, 500);
-        }
+        console.log("[reset_password] send:", { err: sendErr?.message, status: (sendErr as { status?: number })?.status });
 
+        // Sempre gera o link manual como fallback — o admin pode copiar e
+        // enviar caso o rate-limit do GoTrue impeça o envio automático.
+        const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
+          type: "recovery",
+          email: prof.email,
+          options: { redirectTo: `${origin}/set-password` },
+        });
+        console.log("[reset_password] generateLink:", { ok: !linkErr, err: linkErr?.message });
+
+        const rateLimited = !!sendErr && /security purposes|rate/i.test(sendErr.message);
         await admin.from("profiles").update({ must_change_password: true }).eq("id", id);
         await admin.from("audit_logs").insert({
           user_id: caller.id, user_email: caller.email, user_role: "admin",
-          action: "password_reset_sent", description: `Reset enviado para ${prof.email}`,
+          action: rateLimited ? "password_reset_link_generated" : "password_reset_sent",
+          description: `Reset para ${prof.email}${rateLimited ? " (rate-limit: link manual gerado)" : ""}`,
         });
-        console.log("[reset_password] done");
-        return json({ ok: true, email: prof.email });
+
+        return json({
+          ok: true,
+          email: prof.email,
+          emailed: !sendErr,
+          rate_limited: rateLimited,
+          send_error: sendErr?.message ?? null,
+          action_link: linkData?.properties?.action_link ?? null,
+        });
       }
 
       case "delete": {
