@@ -162,7 +162,7 @@ export default function UsersPage() {
   );
 }
 
-function EditUserForm({ user, onDone }: { user: UserRow; onDone: () => void }) {
+function EditUserForm({ user, onDone }: { user: UserRow; onDone: (updated?: UserRow) => void }) {
   const [form, setForm] = useState({
     first_name: user.first_name ?? "",
     last_name: user.last_name ?? "",
@@ -180,7 +180,8 @@ function EditUserForm({ user, onDone }: { user: UserRow; onDone: () => void }) {
     try {
       await callAdmin("update", { id: user.id, ...form });
       toast({ title: "Usuário atualizado" });
-      onDone();
+      onDone({ ...user, ...form });
+
     } catch (e) { setErr((e as Error).message); }
     finally { setLoading(false); }
   };
