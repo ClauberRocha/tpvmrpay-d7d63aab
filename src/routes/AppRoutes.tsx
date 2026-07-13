@@ -27,6 +27,7 @@ export function AppRoutes() {
       <Routes>
         <Route path="/" element={<Navigate to={ROUTES.LOGIN} replace />} />
         <Route path={ROUTES.LOGIN} element={<Login />} />
+        <Route path="/signup" element={<SignUp />} />
         <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPassword />} />
         <Route path={ROUTES.SET_PASSWORD} element={<SetPassword />} />
         <Route path="/reset-password" element={<SetPassword />} />
