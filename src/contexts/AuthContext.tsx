@@ -220,6 +220,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     await logAudit("logout", "Usuário fez logout");
     sessionStorage.removeItem(SESSION_KEY);
+    try { sessionStorage.removeItem("mrpay:tpv-cache:v1"); } catch { /* noop */ }
     await supabase.auth.signOut();
   };
 
