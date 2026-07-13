@@ -4,19 +4,23 @@ import {
   Tooltip, XAxis, YAxis,
 } from "recharts";
 
-import { formatBRL, formatBRLCompact, MESES, monthlySeries, totalsFiltered, type Filtros } from "@/data/tpv";
+import { formatBRL, formatBRLCompact, formatNumber, MESES, monthlySeries, totalsFiltered, type Filtros } from "@/data/tpv";
+import { BUILD_ID, hardReload, purgeClientCaches } from "@/lib/buildInfo";
 
 export function TendenciaTemporal({ filtros }: { filtros: Filtros }) {
   const [ready, setReady] = useState(false);
+  const [auditOpen, setAuditOpen] = useState(false);
 
-  const { series, total, media, mismatch } = useMemo(() => {
+  const { series, total, media, mismatch, totalTx, periodoLabel } = useMemo(() => {
     const raw = monthlySeries(filtros);
     const s = raw.map((p) => ({
       label: `${MESES[p.mes - 1]}/${String(p.ano).slice(2)}`,
+      ano: p.ano,
+      mes: p.mes,
       tpv: p.tpv,
     }));
     const t = s.reduce((acc, p) => acc + p.tpv, 0);
-    const { tpv: totalRef } = totalsFiltered(filtros);
+    const { tpv: totalRef, tx } = totalsFiltered(filtros);
     const diff = t - totalRef;
     const isMismatch = Math.abs(diff) > 1;
     if (import.meta.env.DEV && isMismatch) {
@@ -24,11 +28,20 @@ export function TendenciaTemporal({ filtros }: { filtros: Filtros }) {
         `[TendenciaTemporal] Divergência: série=${t.toFixed(2)} vs total=${totalRef.toFixed(2)}`
       );
     }
+    const first = s[0];
+    const last = s[s.length - 1];
+    const periodo = s.length
+      ? s.length === 1
+        ? first.label
+        : `${first.label} → ${last.label} (${s.length} meses)`
+      : "Sem meses no período";
     return {
       series: s,
       total: t,
+      totalTx: tx,
       media: s.length ? t / s.length : 0,
       mismatch: isMismatch ? { serie: t, total: totalRef, diff } : null,
+      periodoLabel: periodo,
     };
   }, [filtros]);
 
@@ -50,6 +63,13 @@ export function TendenciaTemporal({ filtros }: { filtros: Filtros }) {
   const subtitulo = semFiltroSegUf
     ? "Captação mensal"
     : `Captação mensal · ${filtros.segmento !== "todos" ? filtros.segmento : filtros.uf}`;
+
+  const mesesLabel = filtros.meses.length === 0
+    ? "todos"
+    : filtros.meses.slice().sort((a, b) => a - b).map((m) => MESES[m - 1]).join(", ");
+  const anoLabel = filtros.ano === "todos" ? "todos" : String(filtros.ano);
+
+
 
   return (
     <div className="panel">
@@ -156,6 +176,95 @@ export function TendenciaTemporal({ filtros }: { filtros: Filtros }) {
           </p>
         );
       })()}
+
+      <div className="mt-3 rounded-lg border border-border/50 bg-muted/10">
+        <button
+          type="button"
+          onClick={() => setAuditOpen((v) => !v)}
+          aria-expanded={auditOpen}
+          aria-controls="tpv-audit-panel"
+          className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-xs font-semibold text-white hover:bg-muted/20"
+        >
+          <span>🔎 Auditoria do cálculo (Evolução do TPV)</span>
+          <span className="text-muted-foreground">{auditOpen ? "▲" : "▼"}</span>
+        </button>
+        {auditOpen && (
+          <div id="tpv-audit-panel" className="space-y-3 border-t border-border/40 px-3 py-3 text-xs text-white">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <div>
+                <div className="text-muted-foreground">Período</div>
+                <div className="num-display">{periodoLabel}</div>
+              </div>
+              <div>
+                <div className="text-muted-foreground">Transações no período</div>
+                <div className="num-display">{formatNumber(totalTx)}</div>
+              </div>
+              <div>
+                <div className="text-muted-foreground">TPV agregado (série)</div>
+                <div className="num-display">{formatBRL(total)}</div>
+              </div>
+              <div>
+                <div className="text-muted-foreground">TPV de referência (totalsFiltered)</div>
+                <div className="num-display">{formatBRL(totalsFiltered(filtros).tpv)}</div>
+              </div>
+            </div>
+
+            <div>
+              <div className="mb-1 text-muted-foreground">Filtros ativos</div>
+              <div className="flex flex-wrap gap-1.5">
+                <span className="rounded-md border border-border/50 bg-background/40 px-2 py-0.5">ano: <b>{anoLabel}</b></span>
+                <span className="rounded-md border border-border/50 bg-background/40 px-2 py-0.5">meses: <b>{mesesLabel}</b></span>
+                <span className="rounded-md border border-border/50 bg-background/40 px-2 py-0.5">segmento: <b>{filtros.segmento}</b></span>
+                <span className="rounded-md border border-border/50 bg-background/40 px-2 py-0.5">uf: <b>{filtros.uf}</b></span>
+              </div>
+            </div>
+
+            {series.length > 0 && (
+              <div>
+                <div className="mb-1 text-muted-foreground">Composição mensal</div>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[320px] border-collapse text-[11px]">
+                    <thead>
+                      <tr className="text-muted-foreground">
+                        <th className="border-b border-border/40 px-2 py-1 text-left font-medium">Mês</th>
+                        <th className="border-b border-border/40 px-2 py-1 text-right font-medium">TPV</th>
+                        <th className="border-b border-border/40 px-2 py-1 text-right font-medium">% do total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {series.map((p) => (
+                        <tr key={`${p.ano}-${p.mes}`}>
+                          <td className="border-b border-border/20 px-2 py-1">{p.label}</td>
+                          <td className="num-display border-b border-border/20 px-2 py-1 text-right">{formatBRL(p.tpv)}</td>
+                          <td className="num-display border-b border-border/20 px-2 py-1 text-right">
+                            {total > 0 ? ((p.tpv / total) * 100).toFixed(1) : "0.0"}%
+                          </td>
+                        </tr>
+                      ))}
+                      <tr>
+                        <td className="px-2 py-1 font-semibold">Σ Soma</td>
+                        <td className="num-display px-2 py-1 text-right font-semibold">{formatBRL(total)}</td>
+                        <td className="num-display px-2 py-1 text-right font-semibold">100.0%</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/40 pt-2 text-[11px] text-muted-foreground">
+              <span>Build: <span className="num-display text-white">{BUILD_ID}</span></span>
+              <button
+                type="button"
+                onClick={async () => { await purgeClientCaches(); hardReload(); }}
+                className="rounded-md border border-border/60 bg-background/40 px-2 py-1 text-white hover:bg-muted/30"
+              >
+                Limpar cache e recarregar
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
