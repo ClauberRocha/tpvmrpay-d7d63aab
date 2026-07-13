@@ -29,6 +29,7 @@ export default function UsersPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<UserRow | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -110,6 +111,7 @@ export default function UsersPage() {
                     {u.must_change_password && <span className="ml-2 text-xs text-warning">(1º acesso)</span>}
                   </td>
                   <td className="p-3 flex gap-1">
+                    <Button size="sm" variant="ghost" onClick={() => setEditing(u)} title="Editar"><Pencil className="h-4 w-4" /></Button>
                     <Button size="sm" variant="ghost" onClick={() => handleReset(u.id)} title="Resetar senha"><KeyRound className="h-4 w-4" /></Button>
                     <Button size="sm" variant="ghost" onClick={() => handleToggleActive(u)} title={u.is_active ? "Desativar" : "Ativar"}><Power className="h-4 w-4" /></Button>
                     <Button size="sm" variant="ghost" onClick={() => handleDelete(u.id)} title="Excluir"><Trash2 className="h-4 w-4 text-destructive" /></Button>
@@ -120,7 +122,79 @@ export default function UsersPage() {
           </table>
         </div>
       )}
+
+      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Editar usuário</DialogTitle></DialogHeader>
+          {editing && (
+            <EditUserForm
+              user={editing}
+              onDone={() => { setEditing(null); void load(); }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
+  );
+}
+
+function EditUserForm({ user, onDone }: { user: UserRow; onDone: () => void }) {
+  const [form, setForm] = useState({
+    first_name: user.first_name ?? "",
+    last_name: user.last_name ?? "",
+    department: user.department ?? "",
+    role: user.role,
+    is_active: user.is_active,
+  });
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    setErr(null);
+    setLoading(true);
+    try {
+      await callAdmin("update", { id: user.id, ...form });
+      toast({ title: "Usuário atualizado" });
+      onDone();
+    } catch (e) { setErr((e as Error).message); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <form onSubmit={submit} className="space-y-3">
+      <div className="grid grid-cols-2 gap-3">
+        <div><Label>Nome</Label><Input required value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} /></div>
+        <div><Label>Sobrenome</Label><Input required value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} /></div>
+      </div>
+      <div><Label>E-mail</Label><Input value={user.email} disabled /></div>
+      <div><Label>Departamento</Label><Input value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })} /></div>
+      <div>
+        <Label>Perfil</Label>
+        <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v as UserRow["role"] })}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="admin">Administrador</SelectItem>
+            <SelectItem value="manager">Gestor</SelectItem>
+            <SelectItem value="user">Usuário</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label>Status</Label>
+        <Select value={form.is_active ? "1" : "0"} onValueChange={(v) => setForm({ ...form, is_active: v === "1" })}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="1">Ativo</SelectItem>
+            <SelectItem value="0">Inativo</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      {err && <div className="text-sm text-destructive">{err}</div>}
+      <Button type="submit" disabled={loading} className="w-full">
+        {loading ? <Loader2 className="animate-spin h-4 w-4" /> : "Salvar alterações"}
+      </Button>
+    </form>
   );
 }
 
