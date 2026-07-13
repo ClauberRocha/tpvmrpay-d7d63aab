@@ -1,7 +1,7 @@
 // Serves the TPV dataset and client-owner mapping only to authenticated users.
 // The JSON payloads live next to this function (outside the web bundle) so they
 // cannot be downloaded as static assets from the public build.
-import { createClient } from "npm:@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2.58.0";
 
 import tpvData from "./tpv.json" with { type: "json" };
 import ownersData from "./clienteProprietario.json" with { type: "json" };
