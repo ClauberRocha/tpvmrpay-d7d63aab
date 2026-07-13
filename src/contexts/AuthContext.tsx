@@ -98,27 +98,62 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => sub.subscription.unsubscribe();
   }, [loadProfile]);
 
-  // Auto-logout por inatividade (30 min)
+  // ==== Configuração de sessão ====
+  // Tempo de inatividade antes do logout automático (30 min)
+  const IDLE_TIMEOUT_MS = 30 * 60 * 1000;
+
+  // Auto-logout por inatividade
   useEffect(() => {
     if (!session) return;
     let timer: number;
     const reset = () => {
       window.clearTimeout(timer);
       timer = window.setTimeout(() => {
+        void logAudit("session_timeout", "Logout automático por inatividade", "success");
         void supabase.auth.signOut();
-      }, 30 * 60 * 1000);
+      }, IDLE_TIMEOUT_MS);
     };
-    ["mousemove", "keydown", "click", "scroll"].forEach((ev) =>
-      window.addEventListener(ev, reset, { passive: true }),
-    );
+    const events = ["mousemove", "keydown", "click", "scroll", "touchstart"];
+    events.forEach((ev) => window.addEventListener(ev, reset, { passive: true }));
     reset();
     return () => {
       window.clearTimeout(timer);
-      ["mousemove", "keydown", "click", "scroll"].forEach((ev) =>
-        window.removeEventListener(ev, reset),
-      );
+      events.forEach((ev) => window.removeEventListener(ev, reset));
     };
   }, [session]);
+
+  // Auto-logout quando o token da sessão expira
+  useEffect(() => {
+    if (!session?.expires_at) return;
+    const msUntilExpiry = session.expires_at * 1000 - Date.now();
+    if (msUntilExpiry <= 0) {
+      void supabase.auth.signOut();
+      return;
+    }
+    const t = window.setTimeout(() => {
+      void logAudit("session_expired", "Sessão expirada", "success");
+      void supabase.auth.signOut();
+    }, msUntilExpiry);
+    return () => window.clearTimeout(t);
+  }, [session]);
+
+  // Mapeia mensagens do provedor para mensagens seguras (sem detalhes sensíveis)
+  const humanizeAuthError = (raw: string): string => {
+    const msg = (raw || "").toLowerCase();
+    if (msg.includes("invalid login credentials") || msg.includes("invalid_credentials")) {
+      return "E-mail ou senha incorretos.";
+    }
+    if (msg.includes("email not confirmed")) {
+      return "Confirme seu e-mail antes de entrar.";
+    }
+    if (msg.includes("too many requests") || msg.includes("rate limit")) {
+      return "Muitas tentativas em pouco tempo. Aguarde alguns minutos.";
+    }
+    if (msg.includes("network")) {
+      return "Falha de conexão. Verifique sua internet e tente novamente.";
+    }
+    return "Não foi possível entrar. Verifique suas credenciais e tente novamente.";
+  };
 
   const signIn = async (email: string, password: string) => {
     const normalized = email.trim().toLowerCase();
@@ -140,7 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) {
       await supabase.rpc("record_login_attempt", { _email: normalized, _success: false, _user_agent: navigator.userAgent });
       await logAudit("login_failed", `Falha em ${normalized}: ${error.message}`, "failure");
-      return { error: error.message };
+      return { error: humanizeAuthError(error.message) };
     }
     // Verifica se conta está ativa
     if (data.user) {
@@ -156,6 +191,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await logAudit("login_success", `Login OK: ${normalized}`);
     return {};
   };
+
 
   const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
     const normalized = email.trim().toLowerCase();
