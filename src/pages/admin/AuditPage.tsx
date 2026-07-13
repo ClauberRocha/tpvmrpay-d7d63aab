@@ -10,7 +10,7 @@ import { AdminLayout } from "./AdminLayout";
 interface Log {
   id: string; created_at: string; user_email: string | null; user_role: string | null;
   action: string; description: string | null; result: string;
-  ip_address: string | null; user_agent: string | null;
+  ip_address: string | null; user_agent: string | null; session_id: string | null;
 }
 
 export default function AuditPage() {
@@ -36,9 +36,9 @@ export default function AuditPage() {
 
   const exportCsv = () => {
     exportToCsv(
-      filtered.map((l) => [l.created_at, l.user_email ?? "", l.user_role ?? "", l.action, l.description ?? "", l.result, l.ip_address ?? "", l.user_agent ?? ""]),
+      filtered.map((l) => [l.created_at, l.user_email ?? "", l.user_role ?? "", l.action, l.description ?? "", l.result, l.session_id ?? "", l.ip_address ?? "", l.user_agent ?? ""]),
       `auditoria-${Date.now()}.csv`,
-      ["Data/Hora", "Usuário", "Perfil", "Ação", "Descrição", "Resultado", "IP", "User Agent"],
+      ["Data/Hora", "Usuário", "Perfil", "Ação", "Descrição", "Resultado", "Session ID", "IP", "User Agent"],
     );
   };
 
@@ -61,6 +61,7 @@ export default function AuditPage() {
                 <th className="p-2 text-left">Data/Hora</th><th className="p-2 text-left">Usuário</th>
                 <th className="p-2 text-left">Perfil</th><th className="p-2 text-left">Ação</th>
                 <th className="p-2 text-left">Descrição</th><th className="p-2 text-left">Resultado</th>
+                <th className="p-2 text-left">Session</th>
               </tr>
             </thead>
             <tbody>
@@ -74,10 +75,13 @@ export default function AuditPage() {
                   <td className="p-2">
                     <span className={l.result === "success" ? "text-success" : "text-destructive"}>{l.result}</span>
                   </td>
+                  <td className="p-2 font-mono text-[10px] text-muted-foreground" title={l.session_id ?? ""}>
+                    {l.session_id ? l.session_id.slice(0, 8) : "—"}
+                  </td>
                 </tr>
               ))}
               {filtered.length === 0 && (
-                <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">Nenhum registro</td></tr>
+                <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">Nenhum registro</td></tr>
               )}
             </tbody>
           </table>

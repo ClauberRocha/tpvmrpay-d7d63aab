@@ -26,6 +26,7 @@ export type Database = {
           metadata: Json | null
           os: string | null
           result: string
+          session_id: string | null
           user_agent: string | null
           user_email: string | null
           user_id: string | null
@@ -42,6 +43,7 @@ export type Database = {
           metadata?: Json | null
           os?: string | null
           result?: string
+          session_id?: string | null
           user_agent?: string | null
           user_email?: string | null
           user_id?: string | null
@@ -58,10 +60,38 @@ export type Database = {
           metadata?: Json | null
           os?: string | null
           result?: string
+          session_id?: string | null
           user_agent?: string | null
           user_email?: string | null
           user_id?: string | null
           user_role?: string | null
+        }
+        Relationships: []
+      }
+      login_attempts: {
+        Row: {
+          attempted_at: string
+          email: string
+          id: string
+          ip_address: string | null
+          success: boolean
+          user_agent: string | null
+        }
+        Insert: {
+          attempted_at?: string
+          email: string
+          id?: string
+          ip_address?: string | null
+          success?: boolean
+          user_agent?: string | null
+        }
+        Update: {
+          attempted_at?: string
+          email?: string
+          id?: string
+          ip_address?: string | null
+          success?: boolean
+          user_agent?: string | null
         }
         Relationships: []
       }
@@ -127,6 +157,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_login_allowed: {
+        Args: { _email: string }
+        Returns: {
+          allowed: boolean
+          attempts: number
+          remaining_seconds: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -135,14 +173,29 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
-      log_audit: {
-        Args: {
-          _action: string
-          _description?: string
-          _metadata?: Json
-          _result?: string
-        }
-        Returns: string
+      log_audit:
+        | {
+            Args: {
+              _action: string
+              _description?: string
+              _metadata?: Json
+              _result?: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              _action: string
+              _description?: string
+              _metadata?: Json
+              _result?: string
+              _session_id?: string
+            }
+            Returns: string
+          }
+      record_login_attempt: {
+        Args: { _email: string; _success: boolean; _user_agent?: string }
+        Returns: undefined
       }
     }
     Enums: {
