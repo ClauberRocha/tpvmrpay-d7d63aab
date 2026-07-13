@@ -1,3 +1,4 @@
+import { Eye, EyeOff } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -14,6 +15,8 @@ export default function SetPassword() {
   const [pwd2, setPwd2] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [show1, setShow1] = useState(false);
+  const [show2, setShow2] = useState(false);
 
   useEffect(() => {
     // Se veio via link (hash com access_token), supabase-js já processa detectSessionInUrl
@@ -56,11 +59,33 @@ export default function SetPassword() {
         <form onSubmit={onSubmit} className="space-y-4">
           <div>
             <Label htmlFor="pwd">Nova senha</Label>
-            <Input id="pwd" type="password" required value={pwd} onChange={(e) => setPwd(e.target.value)} />
+            <div className="relative">
+              <Input id="pwd" type={show1 ? "text" : "password"} required className="pr-10" value={pwd} onChange={(e) => setPwd(e.target.value)} />
+              <button
+                type="button"
+                onClick={() => setShow1((v) => !v)}
+                aria-label={show1 ? "Ocultar senha" : "Mostrar senha"}
+                className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground focus:outline-none"
+                tabIndex={-1}
+              >
+                {show1 ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
           <div>
             <Label htmlFor="pwd2">Confirmar senha</Label>
-            <Input id="pwd2" type="password" required value={pwd2} onChange={(e) => setPwd2(e.target.value)} />
+            <div className="relative">
+              <Input id="pwd2" type={show2 ? "text" : "password"} required className="pr-10" value={pwd2} onChange={(e) => setPwd2(e.target.value)} />
+              <button
+                type="button"
+                onClick={() => setShow2((v) => !v)}
+                aria-label={show2 ? "Ocultar senha" : "Mostrar senha"}
+                className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground focus:outline-none"
+                tabIndex={-1}
+              >
+                {show2 ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
           {err && <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">{err}</div>}
           <Button type="submit" disabled={loading} className="w-full font-semibold">Salvar senha</Button>
