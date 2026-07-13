@@ -1,21 +1,36 @@
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, useState, useEffect } from "react";
 import {
   Area, AreaChart, CartesianGrid, ResponsiveContainer,
   Tooltip, XAxis, YAxis,
 } from "recharts";
 
-import { formatBRL, formatBRLCompact, MESES, monthlySeries, type Filtros } from "@/data/tpv";
+import { formatBRL, formatBRLCompact, MESES, monthlySeries, totalsFiltered, type Filtros } from "@/data/tpv";
 
 export function TendenciaTemporal({ filtros }: { filtros: Filtros }) {
-  const series = useMemo(() => {
-    return monthlySeries(filtros).map((p) => ({
+  const [ready, setReady] = useState(false);
+
+  const { series, total, media } = useMemo(() => {
+    const raw = monthlySeries(filtros);
+    const s = raw.map((p) => ({
       label: `${MESES[p.mes - 1]}/${String(p.ano).slice(2)}`,
       tpv: p.tpv,
     }));
+    const t = s.reduce((acc, p) => acc + p.tpv, 0);
+    // Verificação: soma da série mensal vs total filtrado
+    const { tpv: totalRef } = totalsFiltered(filtros);
+    if (import.meta.env.DEV && Math.abs(t - totalRef) > 1) {
+      console.warn(
+        `[TendenciaTemporal] Divergência: série=${t.toFixed(2)} vs total=${totalRef.toFixed(2)}`
+      );
+    }
+    return { series: s, total: t, media: s.length ? t / s.length : 0 };
   }, [filtros]);
 
-  const total = series.reduce((s, p) => s + p.tpv, 0);
-  const media = series.length ? total / series.length : 0;
+  useEffect(() => {
+    setReady(false);
+    const id = requestAnimationFrame(() => setReady(true));
+    return () => cancelAnimationFrame(id);
+  }, [filtros]);
 
   const tooltipFormatter = useCallback(
     (v: number) => {
