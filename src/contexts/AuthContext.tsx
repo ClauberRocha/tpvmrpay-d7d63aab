@@ -3,6 +3,7 @@ import type { Session, User } from "@supabase/supabase-js";
 
 import { supabase } from "@/integrations/supabase/client";
 import { loadTpvData } from "@/data/tpv";
+import { perfMark } from "@/lib/perfMetrics";
 
 export type AppRole = "admin" | "manager" | "user";
 
