@@ -82,8 +82,15 @@ export default function UsersPage() {
     }
   };
   const handleReset = async (id: string) => {
-    try { await callAdmin("reset_password", { id }); toast({ title: "Link enviado" }); }
-    catch (e) { toast({ title: "Erro", description: (e as Error).message, variant: "destructive" }); }
+    try {
+      const res = await callAdmin("reset_password", { id });
+      toast({
+        title: "Link de recuperação enviado",
+        description: res?.email ? `E-mail disparado para ${res.email}. Peça para verificar a caixa de entrada e o spam.` : undefined,
+      });
+    } catch (e) {
+      toast({ title: "Falha ao enviar reset", description: (e as Error).message, variant: "destructive" });
+    }
   };
   const handleDelete = async (id: string) => {
     if (!confirm("Excluir usuário permanentemente?")) return;
