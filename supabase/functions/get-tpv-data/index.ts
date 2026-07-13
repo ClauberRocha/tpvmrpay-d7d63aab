@@ -20,16 +20,6 @@ const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 // Pre-serialize once at cold start — avoids re-stringifying ~850KB per request.
 const PAYLOAD_JSON = JSON.stringify({ tpv: tpvData, owners: ownersData });
 const PAYLOAD_BYTES = new TextEncoder().encode(PAYLOAD_JSON);
-
-// Pre-compress with gzip once — served to all clients that accept it.
-async function gzip(bytes: Uint8Array): Promise<Uint8Array> {
-  const cs = new CompressionStream("gzip");
-  const stream = new Response(new Blob([bytes]).stream().pipeThrough(cs));
-  return new Uint8Array(await (await stream.blob()).arrayBuffer());
-}
-const PAYLOAD_GZIP = await gzip(PAYLOAD_BYTES);
-
-// Weak ETag derived from payload length (content is static per deploy).
 const ETAG = `W/"tpv-${PAYLOAD_BYTES.length}"`;
 
 function json(body: unknown, status = 200) {
@@ -42,39 +32,62 @@ function json(body: unknown, status = 200) {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader) return json({ error: "missing_auth" }, 401);
+  try {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      console.log("missing auth header");
+      return json({ error: "missing_auth" }, 401);
+    }
 
-  const userClient = createClient(SUPABASE_URL, ANON, {
-    global: { headers: { Authorization: authHeader } },
-  });
+    const userClient = createClient(SUPABASE_URL, ANON, {
+      global: { headers: { Authorization: authHeader } },
+    });
 
-  const { data: userData, error: userErr } = await userClient.auth.getUser();
-  if (userErr || !userData.user) return json({ error: "unauthorized" }, 401);
+    const { data: userData, error: userErr } = await userClient.auth.getUser();
+    if (userErr || !userData.user) {
+      console.log("getUser failed", userErr?.message);
+      return json({ error: "unauthorized" }, 401);
+    }
 
-  // Additional authorization: user must be active AND have a role assigned.
-  const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
-  const [{ data: profile }, { data: roles }] = await Promise.all([
-    admin.from("profiles").select("is_active").eq("id", userData.user.id).maybeSingle(),
-    admin.from("user_roles").select("role").eq("user_id", userData.user.id),
-  ]);
+    const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+    const [{ data: profile, error: pErr }, { data: roles, error: rErr }] = await Promise.all([
+      admin.from("profiles").select("is_active").eq("id", userData.user.id).maybeSingle(),
+      admin.from("user_roles").select("role").eq("user_id", userData.user.id),
+    ]);
+    if (pErr) console.log("profiles error", pErr.message);
+    if (rErr) console.log("user_roles error", rErr.message);
 
-  if (!profile?.is_active) return json({ error: "inactive" }, 403);
-  if (!roles || roles.length === 0) return json({ error: "no_role" }, 403);
+    if (!profile?.is_active) {
+      console.log("inactive or missing profile", userData.user.id);
+      return json({ error: "inactive" }, 403);
+    }
+    if (!roles || roles.length === 0) {
+      console.log("no role", userData.user.id);
+      return json({ error: "no_role" }, 403);
+    }
 
-  // Support ETag conditional requests for instant 304s.
-  if (req.headers.get("if-none-match") === ETAG) {
-    return new Response(null, { status: 304, headers: { ...corsHeaders, ETag: ETAG } });
+    if (req.headers.get("if-none-match") === ETAG) {
+      return new Response(null, { status: 304, headers: { ...corsHeaders, ETag: ETAG } });
+    }
+
+    const headers: Record<string, string> = {
+      ...corsHeaders,
+      "Content-Type": "application/json",
+      "Cache-Control": "private, max-age=300",
+      ETag: ETAG,
+    };
+
+    // Compress on-the-fly when the client accepts gzip; stream avoids
+    // allocating the compressed buffer entirely in memory.
+    const acceptsGzip = (req.headers.get("accept-encoding") ?? "").includes("gzip");
+    if (acceptsGzip) {
+      headers["Content-Encoding"] = "gzip";
+      const stream = new Blob([PAYLOAD_BYTES]).stream().pipeThrough(new CompressionStream("gzip"));
+      return new Response(stream, { status: 200, headers });
+    }
+    return new Response(PAYLOAD_BYTES, { status: 200, headers });
+  } catch (e) {
+    console.error("get-tpv-data crashed", (e as Error)?.message, (e as Error)?.stack);
+    return json({ error: "internal", message: (e as Error)?.message }, 500);
   }
-
-  const acceptsGzip = (req.headers.get("accept-encoding") ?? "").includes("gzip");
-  const body = acceptsGzip ? PAYLOAD_GZIP : PAYLOAD_BYTES;
-  const headers: Record<string, string> = {
-    ...corsHeaders,
-    "Content-Type": "application/json",
-    "Cache-Control": "private, max-age=300",
-    ETag: ETAG,
-  };
-  if (acceptsGzip) headers["Content-Encoding"] = "gzip";
-  return new Response(body, { status: 200, headers });
 });
