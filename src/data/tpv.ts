@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { perfMark } from "@/lib/perfMetrics";
 
 export type Periodo = number | "todos";
 
