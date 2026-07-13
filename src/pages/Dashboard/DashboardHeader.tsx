@@ -1,13 +1,16 @@
-import { Activity, Download } from "lucide-react";
+import { Activity, Download, LogOut, ScrollText, User, Users } from "lucide-react";
+import { Link } from "react-router-dom";
 
 import { useDashboardFilter } from "./DashboardFilterContext";
 
 import mrpayLogo from "@/assets/mrpay-logo.png";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 import { exportDashboardPdf } from "@/utils/exportPdf";
 
 export function DashboardHeader() {
   const { filtros } = useDashboardFilter();
+  const { profile, role, isAdmin, signOut } = useAuth();
   const lastUpdate = new Date().toLocaleString("pt-BR", {
     day: "2-digit",
     month: "2-digit",
@@ -34,6 +37,20 @@ export function DashboardHeader() {
         </div>
       </div>
       <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3 flex-wrap">
+        {isAdmin && (
+          <>
+            <Button asChild size="sm" variant="outline" className="gap-2">
+              <Link to="/admin/users"><Users className="h-4 w-4" /> Usuários</Link>
+            </Button>
+            <Button asChild size="sm" variant="outline" className="gap-2">
+              <Link to="/admin/audit"><ScrollText className="h-4 w-4" /> Auditoria</Link>
+            </Button>
+          </>
+        )}
+        <Button asChild size="sm" variant="ghost" className="gap-2">
+          <Link to="/profile"><User className="h-4 w-4" /> {profile?.first_name || "Perfil"}</Link>
+        </Button>
         <Button
           onClick={() => exportDashboardPdf(filtros)}
           className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
@@ -42,9 +59,10 @@ export function DashboardHeader() {
           <Download className="h-4 w-4" />
           Baixar PDF
         </Button>
+        <Button size="sm" variant="ghost" onClick={signOut} title="Sair"><LogOut className="h-4 w-4" /></Button>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Activity className="h-4 w-4 text-primary" />
-          Atualizado em {lastUpdate}
+          {role === "admin" ? "Admin" : role === "manager" ? "Gestor" : "Usuário"} · {lastUpdate}
         </div>
       </div>
     </header>
