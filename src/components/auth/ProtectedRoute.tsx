@@ -32,7 +32,7 @@ export function ProtectedRoute({ children, requireRole }: Props) {
   if (requireRole) {
     const allowed = Array.isArray(requireRole) ? requireRole : [requireRole];
     if (!role || !allowed.includes(role)) {
-      return <Navigate to="/" replace />;
+      return <Navigate to="/dashboard" replace />;
     }
   }
 
