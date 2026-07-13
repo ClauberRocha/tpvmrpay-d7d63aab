@@ -1,4 +1,4 @@
-import { Loader2, Download, Search, Trash2 } from "lucide-react";
+import { Loader2, Download, Search, Trash2, FileJson, FileSpreadsheet } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import {
@@ -13,11 +13,13 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { exportToCsv } from "@/utils/exportCsv";
+import { exportToJson } from "@/utils/exportJson";
 import { AdminLayout } from "./AdminLayout";
 
 interface Log {
@@ -26,12 +28,24 @@ interface Log {
   ip_address: string | null; user_agent: string | null; session_id: string | null;
 }
 
+async function fetchClientIp(): Promise<string | null> {
+  try {
+    const res = await fetch("https://api.ipify.org?format=json");
+    if (!res.ok) return null;
+    const data = (await res.json()) as { ip?: string };
+    return data.ip ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export default function AuditPage() {
   const [logs, setLogs] = useState<Log[]>([]);
   const [loading, setLoading] = useState(true);
   const [clearing, setClearing] = useState(false);
   const [q, setQ] = useState("");
-  const { role } = useAuth();
+  const [exportedBeforeClear, setExportedBeforeClear] = useState(false);
+  const { role, user } = useAuth();
   const { toast } = useToast();
   const isAdmin = role === "admin";
 
@@ -58,21 +72,43 @@ export default function AuditPage() {
       `auditoria-${Date.now()}.csv`,
       ["Data/Hora", "Usuário", "Perfil", "Ação", "Descrição", "Resultado", "Session ID", "IP", "User Agent"],
     );
+    setExportedBeforeClear(true);
+  };
+
+  const exportJson = () => {
+    exportToJson(filtered, `auditoria-${Date.now()}.json`);
+    setExportedBeforeClear(true);
   };
 
   const clearLogs = async () => {
     setClearing(true);
     try {
+      const totalBefore = logs.length;
+      const clearedAt = new Date().toISOString();
+      const clientIp = await fetchClientIp();
+
       const { error, count } = await supabase
         .from("audit_logs")
         .delete({ count: "exact" })
         .not("id", "is", null);
       if (error) throw error;
+
       await supabase.rpc("log_audit", {
         _action: "audit_logs_cleared",
         _description: `Logs de auditoria apagados (${count ?? 0} registros)`,
+        _metadata: {
+          admin_id: user?.id ?? null,
+          admin_email: user?.email ?? null,
+          ip_address: clientIp,
+          user_agent: navigator.userAgent,
+          cleared_at: clearedAt,
+          records_deleted: count ?? 0,
+          records_visible_before: totalBefore,
+          exported_before_clear: exportedBeforeClear,
+        },
       });
       toast({ title: "Logs apagados", description: `${count ?? 0} registros removidos.` });
+      setExportedBeforeClear(false);
       await load();
     } catch (e) {
       toast({
@@ -87,14 +123,15 @@ export default function AuditPage() {
 
   return (
     <AdminLayout title="Auditoria">
-      <div className="flex gap-2 mb-4">
-        <div className="relative flex-1">
+      <div className="flex flex-wrap gap-2 mb-4">
+        <div className="relative flex-1 min-w-[220px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Pesquisar por usuário, ação, descrição..." className="pl-9" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
-        <Button onClick={exportCsv} variant="outline" className="gap-2"><Download className="h-4 w-4" /> CSV</Button>
+        <Button onClick={exportCsv} variant="outline" className="gap-2"><FileSpreadsheet className="h-4 w-4" /> CSV</Button>
+        <Button onClick={exportJson} variant="outline" className="gap-2"><FileJson className="h-4 w-4" /> JSON</Button>
         {isAdmin && (
-          <AlertDialog>
+          <AlertDialog onOpenChange={(open) => { if (!open) setExportedBeforeClear(false); }}>
             <AlertDialogTrigger asChild>
               <Button variant="destructive" className="gap-2" disabled={clearing || logs.length === 0}>
                 {clearing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
@@ -105,12 +142,33 @@ export default function AuditPage() {
               <AlertDialogHeader>
                 <AlertDialogTitle>Apagar todos os logs de auditoria?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Esta ação é irreversível. Todos os {logs.length} registros de auditoria serão removidos permanentemente. Um novo registro será criado para documentar esta operação.
+                  Esta ação é irreversível. Todos os {logs.length} registros serão removidos permanentemente.
+                  Recomendamos exportar antes um backup em CSV ou JSON.
+                  Um novo registro será criado com seu ID de admin, IP e horário exato.
                 </AlertDialogDescription>
               </AlertDialogHeader>
+              <div className="flex gap-2 my-2">
+                <Button onClick={exportCsv} variant="outline" size="sm" className="gap-2 flex-1">
+                  <Download className="h-4 w-4" /> Exportar CSV
+                </Button>
+                <Button onClick={exportJson} variant="outline" size="sm" className="gap-2 flex-1">
+                  <Download className="h-4 w-4" /> Exportar JSON
+                </Button>
+              </div>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <Checkbox
+                  checked={exportedBeforeClear}
+                  onCheckedChange={(v) => setExportedBeforeClear(v === true)}
+                />
+                Confirmo que exportei ou não preciso de backup dos logs.
+              </label>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={() => void clearLogs()} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                <AlertDialogAction
+                  onClick={() => void clearLogs()}
+                  disabled={!exportedBeforeClear}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
                   Sim, apagar tudo
                 </AlertDialogAction>
               </AlertDialogFooter>
