@@ -10,7 +10,7 @@ import { AdminLayout } from "./AdminLayout";
 interface Log {
   id: string; created_at: string; user_email: string | null; user_role: string | null;
   action: string; description: string | null; result: string;
-  ip_address: string | null; user_agent: string | null;
+  ip_address: string | null; user_agent: string | null; session_id: string | null;
 }
 
 export default function AuditPage() {
@@ -36,9 +36,9 @@ export default function AuditPage() {
 
   const exportCsv = () => {
     exportToCsv(
-      filtered.map((l) => [l.created_at, l.user_email ?? "", l.user_role ?? "", l.action, l.description ?? "", l.result, l.ip_address ?? "", l.user_agent ?? ""]),
+      filtered.map((l) => [l.created_at, l.user_email ?? "", l.user_role ?? "", l.action, l.description ?? "", l.result, l.session_id ?? "", l.ip_address ?? "", l.user_agent ?? ""]),
       `auditoria-${Date.now()}.csv`,
-      ["Data/Hora", "Usuário", "Perfil", "Ação", "Descrição", "Resultado", "IP", "User Agent"],
+      ["Data/Hora", "Usuário", "Perfil", "Ação", "Descrição", "Resultado", "Session ID", "IP", "User Agent"],
     );
   };
 
