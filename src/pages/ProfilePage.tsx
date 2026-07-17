@@ -24,10 +24,12 @@ export default function ProfilePage() {
       const { error } = await supabase.auth.updateUser({ password: pwd });
       if (error) toast({ title: "Erro na senha", description: error.message, variant: "destructive" });
       else {
+        await supabase.from("profiles").update({ must_change_password: false }).eq("id", profile.id);
         await supabase.rpc("log_audit", { _action: "password_changed", _description: "Alteração via perfil", _result: "success", _metadata: {} });
         setPwd("");
       }
     }
+
     await refresh();
     setLoading(false);
     toast({ title: "Perfil atualizado" });
