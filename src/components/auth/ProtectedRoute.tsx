@@ -45,9 +45,12 @@ export function ProtectedRoute({ children, requireRole }: Props) {
     return <Navigate to="/login" replace />;
   }
 
-  // Não força redirecionamento para /set-password — usuários com senha
-  // provisória continuam podendo acessá-lo manualmente, mas o fluxo padrão
-  // após logout/sessão nova sempre passa por /login.
+  // Se a senha ainda é provisória, força a troca antes de qualquer área protegida.
+  if (profile.must_change_password && location.pathname !== "/set-password") {
+    return <Navigate to="/set-password" replace />;
+  }
+
+
 
 
   // Exige que exista uma role atribuída para acessar áreas protegidas
